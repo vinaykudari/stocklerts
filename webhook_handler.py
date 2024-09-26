@@ -37,6 +37,8 @@ def webhook():
         try:
             logging.info('Pulling latest code from GitHub')
             # Execute git pull on the host via Docker Compose
+            subprocess.check_call(['ls', '~'])
+            subprocess.check_call(['ls', '-l'])
             subprocess.check_call(['git', 'pull', 'origin', 'main'])
             subprocess.check_call(['docker-compose', 'up', '-d', '--build'])
 
