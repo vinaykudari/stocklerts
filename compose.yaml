@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./logs:/app/logs
-      - shared-code:/app
+      - ./:/stocklerts
     environment:
       FINNHUB_API_KEY: "${FINNHUB_API_KEY}"
       ENCRYPT_KEY: "${ENCRYPT_KEY}"
@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile.webhook
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - shared-code:/app
+      - ./:/stocklerts
     environment:
       - GH_WEBHOOK_SECRET=${GH_WEBHOOK_SECRET}
     ports:
@@ -43,6 +43,3 @@ services:
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  shared-code:
