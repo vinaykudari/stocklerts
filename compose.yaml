@@ -10,18 +10,6 @@ services:
       FINNHUB_API_KEY: "${FINNHUB_API_KEY}"
       ENCRYPT_KEY: "${ENCRYPT_KEY}"
     restart: unless-stopped
-
-  webhook-handler:
-    container_name: stocklerts-webhook-handler
-    build:
-      context: .
-      dockerfile: Dockerfile.webhook
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - GH_WEBHOOK_SECRET=${GH_WEBHOOK_SECRET}
-    ports:
-      - "5001:5000"
     networks:
       - app-network
 
@@ -32,9 +20,7 @@ services:
       - "4040:4040"
     environment:
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-    command: http --domain=usable-perch-smoothly.ngrok-free.app webhook-handler:5000
-    depends_on:
-      - webhook-handler
+    command: http host.docker.internal:5001 --domain=usable-perch-smoothly.ngrok-free.app
     networks:
       - app-network
 

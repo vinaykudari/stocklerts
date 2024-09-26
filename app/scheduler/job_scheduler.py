@@ -7,7 +7,7 @@ from queue import Queue
 from app.database.db_manager import DBManager
 import os
 
-from app.stocks.tracker import check_stock_price_change
+from app.price_tracking.tracker import check_stock_price_change
 
 
 def start_scheduler(db_manager: DBManager, ticker_config: dict,

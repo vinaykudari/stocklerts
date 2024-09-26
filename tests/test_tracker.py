@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from datetime import datetime, timedelta, date
 
-from app.stocks.tracker import check_stock_price_change
+from app.price_tracking.tracker import check_stock_price_change
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def mock_ticker_queue():
 
 @pytest.fixture
 def mock_send_notification(mocker):
-    return mocker.patch('app.stocks.tracker.send_notification')
+    return mocker.patch('app.price_tracking.tracker.send_notification')
 
 
 def test_check_stock_price_change_threshold_met(mock_finnhub_client, mock_db_manager, mock_ticker_queue,
