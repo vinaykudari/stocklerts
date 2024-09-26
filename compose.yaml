@@ -1,12 +1,46 @@
-version: '1'
-
 services:
-  stockalerts:
+  stocklerts:
+    container_name: stocklerts-app
     build:
       context: .
-      args:
-        FINNHUB_API_KEY: "${FINNHUB_API_KEY}"
-        ENCRYPT_KEY: "${ENCRYPT_KEY}"
+      dockerfile: Dockerfile
     volumes:
       - ./logs:/app/logs
+    environment:
+      FINNHUB_API_KEY: "${FINNHUB_API_KEY}"
+      ENCRYPT_KEY: "${ENCRYPT_KEY}"
     restart: unless-stopped
+
+  webhook-handler:
+    container_name: stocklerts-webhook-handler
+    build:
+      context: .
+      dockerfile: Dockerfile.webhook
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - GH_WEBHOOK_SECRET=${GH_WEBHOOK_SECRET}
+    ports:
+      - "5001:5000"
+    networks:
+      - app-network
+
+  ngrok:
+    container_name: stocklerts-ngrok
+    image: wernight/ngrok
+    ports:
+      - "4040:4040"
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+      - NGROK_PROTOCOL=http
+      - NGROK_PORT=webhook-handler:5001
+      - NGROK_HOSTNAME=usable-perch-smoothly.ngrok-free.app
+      - NGROK_REGION=us
+    depends_on:
+      - webhook-handler
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
