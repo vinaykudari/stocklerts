@@ -1,12 +1,15 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR stocklerts
 
-COPY webhook_handler_reqs.txt .
+# Install Git
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
+# Install Docker Compose
+RUN pip install --no-cache-dir docker-compose
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r webhook_handler_reqs.txt
-
-COPY webhook_handler.py .
 
 EXPOSE 5000
 
