@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r webhook_handler_reqs.txt
 
 COPY webhook_handler.py .
 
-RUN useradd -m buffett
+RUN useradd -m buffett && usermod -aG docker buffett
 USER buffett
 
 EXPOSE 5000
