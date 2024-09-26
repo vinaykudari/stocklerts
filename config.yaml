@@ -1,0 +1,34 @@
+defaults:
+  cooldown_period_minutes: 60
+  max_notifications_per_day: 100
+  max_quote_calls_per_min: 60
+
+alertzy:
+  accounts:
+    - user_id: 1
+      account_id: 18tu6LkU4y9uNArpNlAyog==
+
+    - user_id: 2
+      account_id: 18tu6LkU4y9uNArpNlAyog==
+
+tickers:
+  - symbol: AAPL
+    threshold:
+        - value: 5
+          users:
+            - 1
+        - value: -0.3
+          users:
+            - 2
+
+  - symbol: MSFT
+    threshold:
+      - value: 5
+        users:
+          - 1
+
+  - symbol: GOOGL
+    threshold:
+      - value: -0.3
+        users:
+          - 1

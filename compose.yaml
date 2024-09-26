@@ -1,0 +1,12 @@
+version: '1'
+
+services:
+  stockalerts:
+    build:
+      context: .
+      args:
+        FINNHUB_API_KEY: "${FINNHUB_API_KEY}"
+        ENCRYPT_KEY: "${ENCRYPT_KEY}"
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
