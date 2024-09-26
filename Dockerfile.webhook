@@ -17,8 +17,8 @@ RUN apt-get update && \
 RUN pip install --upgrade pip
 
 # Install Docker SDK and Python dependencies
-COPY webhook_handler_reqs.txt .
-RUN pip install --no-cache-dir -r webhook_handler_reqs.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Install Docker SDK
 RUN pip install --no-cache-dir docker
