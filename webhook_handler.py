@@ -1,8 +1,9 @@
+import subprocess
+
 from flask import Flask, request, abort
 import hmac
 import hashlib
 import os
-import docker
 
 app = Flask(__name__)
 
@@ -27,34 +28,14 @@ def webhook():
     if not is_valid_signature(request.data, signature):
         abort(401, 'Invalid signature')
 
-    if request.json['ref'] == 'refs/heads/main':
-        client = docker.from_env()
-
-        try:
-            app_container = client.containers.get('stocklerts-app')
-            print('Updating the codebase')
-
-            # Execute git pull
-            exit_code, output = app_container.exec_run('git pull origin main')
-            if exit_code != 0:
-                print(f'Error pulling latest code: {output.decode()}')
-                abort(500, 'Failed to pull the latest code')
-
-            print('Restarting stocklerts')
-            app_container.restart()
-
-        except docker.errors.NotFound:
-            print('Error: Container not found')
-            abort(500, 'Container not found')
-
-        except Exception as e:
-            print(f'Error: {e}')
-            abort(500, 'Internal server error')
-
+    if request.json['ref'] == 'refs/heads/vinay/test/ci-cd':
+        subprocess.run(['git', 'pull', 'origin', 'main'], check=True)
+        subprocess.run(['docker', 'compose', 'down'], check=True)
+        subprocess.run(['docker', 'compose', 'up', '--build', '-d'], check=True)
         return 'OK', 200
 
     return 'Not main branch', 200
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5001)

@@ -1,5 +1,7 @@
+import os
 import logging
 import yaml
+
 from app.scheduler.job_scheduler import start_scheduler
 from app.database.db_manager import DBManager
 
@@ -10,6 +12,10 @@ def load_config(config_path: str) -> dict:
 
 
 def setup_logging(log_file: str) -> None:
+    log_dir = os.path.dirname(log_file)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s [%(levelname)s] %(message)s',
