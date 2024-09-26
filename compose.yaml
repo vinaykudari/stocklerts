@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./:/stocklerts
+      - ~/code/stocklerts:/stocklerts
     environment:
       FINNHUB_API_KEY: "${FINNHUB_API_KEY}"
       ENCRYPT_KEY: "${ENCRYPT_KEY}"
@@ -17,15 +17,16 @@ services:
       context: .
       dockerfile: Dockerfile.webhook
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock  # Allows Docker SDK access
-      - ./:/stocklerts
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/code/stocklerts:/stocklerts
     environment:
       - GH_WEBHOOK_SECRET=${GH_WEBHOOK_SECRET}
+      - FINNHUB_API_KEY=${FINNHUB_API_KEY}
+      - ENCRYPT_KEY=${ENCRYPT_KEY}
     ports:
       - "5001:5000"
     networks:
       - app-network
-    # Remove privileged: true for better security
 
   ngrok:
     container_name: stocklerts-ngrok
