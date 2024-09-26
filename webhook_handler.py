@@ -82,6 +82,16 @@ def rebuild_and_restart_containers():
         raise
 
 
+def configure_git_safe_directory():
+    """Configure Git to recognize the project directory as safe."""
+    logger.info('Configuring Git to recognize /stocklerts as a safe directory')
+    try:
+        subprocess.check_call(['git', 'config', '--global', '--add', 'safe.directory', '/stocklerts'], cwd='/stocklerts')
+    except subprocess.CalledProcessError as e:
+        logger.error(f'Failed to configure Git safe directory: {e}')
+        raise
+
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     logging.info(f'Request: {request.json}')
@@ -95,6 +105,7 @@ def webhook():
 
     if request.json.get('ref') == 'refs/heads/main':
         try:
+            configure_git_safe_directory()
             pull_latest_code()
             rebuild_and_restart_containers()
         except Exception as e:
