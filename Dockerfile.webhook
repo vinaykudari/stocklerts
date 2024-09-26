@@ -8,9 +8,6 @@ RUN pip install --no-cache-dir -r webhook_handler_reqs.txt
 
 COPY webhook_handler.py .
 
-RUN useradd -m buffett && usermod -aG docker buffett
-USER buffett
-
 EXPOSE 5000
 
 CMD ["gunicorn", "-b", "0.0.0.0:5000", "webhook_handler:app"]
