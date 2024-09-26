@@ -27,7 +27,7 @@ services:
 
   ngrok:
     container_name: stocklerts-ngrok
-    image: wernight/ngrok
+    image: ngrok/ngrok
     ports:
       - "4040:4040"
     environment:

@@ -15,7 +15,7 @@ def is_valid_signature(payload_body, signature):
         msg=payload_body,
         digestmod=hashlib.sha256
     ).hexdigest()
-    return hmac.compare_digest(f"sha256={expected_signature}", signature)
+    return hmac.compare_digest(f'sha256={expected_signature}', signature)
 
 
 @app.route('/webhook', methods=['POST'])
