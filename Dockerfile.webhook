@@ -1,0 +1,15 @@
+FROM python:3.11
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y docker.io
+RUN pip install --no-cache-dir Flask==2.0.1 docker==5.0.3
+
+COPY webhook_handler.py .
+
+RUN useradd -m buffett
+USER buffett
+
+EXPOSE 5000
+
+CMD ["python", "webhook_handler.py"]
