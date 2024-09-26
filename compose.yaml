@@ -27,15 +27,12 @@ services:
 
   ngrok:
     container_name: stocklerts-ngrok
-    image: ngrok/ngrok
+    image: ngrok/ngrok:latest
     ports:
       - "4040:4040"
     environment:
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-      - NGROK_PROTOCOL=http
-      - NGROK_PORT=webhook-handler:5001
-      - NGROK_HOSTNAME=usable-perch-smoothly.ngrok-free.app
-      - NGROK_REGION=us
+    command: http --domain=usable-perch-smoothly.ngrok-free.app webhook-handler:5000
     depends_on:
       - webhook-handler
     networks:
