@@ -86,7 +86,9 @@ def configure_git_safe_directory():
     """Configure Git to recognize the project directory as safe."""
     logger.info('Configuring Git to recognize /stocklerts as a safe directory')
     try:
-        subprocess.check_call(['git', 'config', '--global', '--add', 'safe.directory', '/stocklerts'], cwd='/stocklerts')
+        subprocess.check_call(['git', 'config', 'pull.rebase', 'false'], cwd='/stocklerts')
+        subprocess.check_call(['git', 'config', '--global', '--add', 'safe.directory', '/stocklerts'],
+                              cwd='/stocklerts')
     except subprocess.CalledProcessError as e:
         logger.error(f'Failed to configure Git safe directory: {e}')
         raise
