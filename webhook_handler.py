@@ -28,7 +28,7 @@ def webhook():
     if not is_valid_signature(request.data, signature):
         abort(401, 'Invalid signature')
 
-    if request.json['ref'] == 'refs/heads/vinay/test/ci-cd':
+    if request.json['ref'] == 'refs/heads/main':
         subprocess.run(['git', 'pull', 'origin', 'main'], check=True)
         subprocess.run(['docker', 'compose', 'down'], check=True)
         subprocess.run(['docker', 'compose', 'up', '--build', '-d'], check=True)
