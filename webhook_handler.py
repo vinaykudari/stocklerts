@@ -26,7 +26,7 @@ def is_valid_signature(payload_body, signature):
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    logging.info(f'Request: {request.json()}')
+    logging.info(f'Request: {request.json}')
 
     # test
     # signature = request.headers.get('X-Hub-Signature-256')
