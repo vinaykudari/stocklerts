@@ -17,7 +17,7 @@ services:
       context: .
       dockerfile: Dockerfile.webhook
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock  # Allows Docker SDK access
       - ./:/stocklerts
     environment:
       - GH_WEBHOOK_SECRET=${GH_WEBHOOK_SECRET}
@@ -25,7 +25,7 @@ services:
       - "5001:5000"
     networks:
       - app-network
-    privileged: true  # Grants extended privileges
+    # Remove privileged: true for better security
 
   ngrok:
     container_name: stocklerts-ngrok
