@@ -86,12 +86,12 @@ def rebuild_and_restart_containers():
 def webhook():
     logging.info(f'Request: {request.json}')
 
-    signature = request.headers.get('X-Hub-Signature-256')
-    if not signature:
-        abort(400, 'X-Hub-Signature-256 header is missing')
-
-    if not is_valid_signature(request.data, signature):
-        abort(401, 'Invalid signature')
+    # signature = request.headers.get('X-Hub-Signature-256')
+    # if not signature:
+    #     abort(400, 'X-Hub-Signature-256 header is missing')
+    #
+    # if not is_valid_signature(request.data, signature):
+    #     abort(401, 'Invalid signature')
 
     if request.json.get('ref') == 'refs/heads/main':
         try:
