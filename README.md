@@ -90,15 +90,81 @@ tickers:
 
 5. **Run the application**
 
+- Install the dependencies from `webhook_handler_reqs.txt`
+- Start the webhook handler (Check at the end to set this as system service)
+```bash
+gunicorn -b 0.0.0.0:5005 webhook_handler:app
+ ```
+- Start the app server
  ```bash
  poetry run python -m app.main
  ```
 
-**Using docker**
+- Alternatively, use docker
  ```bash
  docker compose build 
  # make sure you sent the env vars before you run this
  FINNHUB_API_KEY=$FINNHUB_API_KEY ENCRYPT_KEY=$ENCRYPT_KEY docker compose up
  ```
+
+### **Setup `webhook_handler.py` as system service**
+
+1. Install `venv` for your python version
+```commandline
+sudo apt install python3.10-venv
+```
+2. Create a venv in the directory
+```commandline
+python3 -m venv venv
+```
+3. Update the permissions
+```commandline
+sudo chown -R <username>:<username> /path/to/project/venv
+```
+
+4. To run the server on boot as daemon we need to set up a system service
+
+```
+sudo vim /etc/systemd/system/stocklerts_webhook_handler.service
+```
+- Add the following content
+```commandline
+[Unit]
+Description=Stocklerts Webhook Handler
+After=network.target
+
+[Service]
+Type=simple
+User=dexter
+Group=dexter
+WorkingDirectory=/path/to/project
+Environment=PATH=/path/to/project/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStartPre=/usr/bin/python3 -m venv venv
+ExecStartPre=/path/to/project/venv/bin/pip install -r /path/to/project/webhook_handler_reqs.txt
+ExecStart=/path/to/project/venv/bin/gunicorn --bind 0.0.0.0:5005 webhook_handler:app
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+- Update the service
+```commandline
+sudo systemctl daemon-reload
+```
+
+- Start the service
+```commandline
+sudo systemctl start stocklerts_webhook_handler.service
+```
+
+- Enable the service to start at boot
+```commandline
+sudo systemctl enable stocklerts_webhook_handler
+```
+
+- Monitor logs
+```commandline
+journalctl -u stocklerts_webhook_handler.service -f
+```
 
 
