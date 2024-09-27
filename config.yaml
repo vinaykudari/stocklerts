@@ -35,6 +35,6 @@ tickers:
 
   - symbol: GAP
     threshold:
-      - value: -0.3
+      - value: 0
         users:
           - 1
