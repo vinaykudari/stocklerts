@@ -14,19 +14,19 @@ alertzy:
 tickers:
   - symbol: AAPL
     threshold:
-        - value: -5
+        - value: -4.5
           users:
             - 1
 
   - symbol: MSFT
     threshold:
-      - value: -5
+      - value: -4.5
         users:
           - 1
 
   - symbol: GOOGL
     threshold:
-      - value: -5
+      - value: -4.5
         users:
           - 1
 
@@ -38,36 +38,36 @@ tickers:
 
   - symbol: META
     threshold:
-      - value: -5
+      - value: -4.5
         users:
           - 1
 
   - symbol: TSLA
     threshold:
-      - value: -5
+      - value: -4.5
         users:
           - 1
 
   - symbol: BMBL
     threshold:
-      - value: -5
+      - value: -4.5
         users:
           - 1
 
   - symbol: COST
     threshold:
-      - value: -5
+      - value: -4.5
         users:
           - 1
 
   - symbol: PCG
     threshold:
-      - value: -5
+      - value: -4.5
         users:
           - 1
 
-  - symbol: GAP
+  - symbol: TSM
     threshold:
-      - value: 5
+      - value: -4.5
         users:
           - 1
