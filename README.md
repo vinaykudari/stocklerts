@@ -1,11 +1,13 @@
 # stocklerts: your personal stock price tracker
 
-A Python-based stock price alert tracker that monitors stock prices using Finnhub and sends push notifications via Alertzy based on user-defined thresholds.
+A Python-based stock alerting service that monitors prices (One symbol/sec) using Finnhub API and sends push notifications via Alertzy based on user-defined thresholds.
 
 ## Features
 
 - Monitor multiple stock tickers with percentage-based alert thresholds.
 - Send push notifications to configured devices using Alertzy.
+- Automatically pull the code and restart the server when the repository updates.
+- Free service for gail residents, add symbols and your encrypted alertzy account id (check below on how to encrypt) in `config.yaml` file to get started 
 
 ## Setup
 
@@ -13,6 +15,7 @@ A Python-based stock price alert tracker that monitors stock prices using Finnhu
 
 - Python 3.7+
 - Poetry
+- Docker/Docker Compose
 
 ### Installation
 
@@ -34,59 +37,59 @@ A Python-based stock price alert tracker that monitors stock prices using Finnhu
     Register at [finnhub](https://finnhub.io) and set the key:
 
     ```dotenv
-    FINNHUB_API_KEY=<your_finnhub_api_key_here>
+    FINNHUB_API_KEY=<your-finnhub-api-key>
     ```
-   
-   Encrypt your Alertz account id at [devglan.com](https://www.devglan.com/online-tools/aes-encryption-decryption) using the exact same settings and set the passcode as env var
+   - Gail residents use our wifi passsword twice `<password><password>` to encrypt your account id
+   - Encrypt your Alertz account id at [devglan.com](https://www.devglan.com/online-tools/aes-encryption-decryption) using the exact same settings and set the passcode as env var
+   <br><br>
    ![img.png](resources/img.png)
-   
+      
    ```dotenv
-    ENCRYPT_KEY=<your_passcode>
-   # gail residents use our wifi passsword twice <password><password> to encrypt your account id
-    ```
-
+       ENCRYPT_KEY=<encrypt-key>
+   ```
+   
 4. **Configure Application**
 
     Install [Alerty](http://alertzy.app/) app and copy the account id
     and update `config/config.yaml` with your desired settings:
-
- ```yaml
- defaults:
-  cooldown_period_minutes: 60
-  max_notifications_per_day: 100
-  max_quote_calls_per_min: 60
-
-alertzy:
-  accounts:
-    - user_id: 1
-      account_id: <encrypted_account_id>
-
-    - user_id: 2
-      account_id: 18tu6LkU4y9uNArpNlAyog==
-
-tickers:
-  - symbol: AAPL
-    threshold:
-        - value: 5
-          users:
-            - 1
-        - value: 0
-          users:
-            - 2
-
-  - symbol: MSFT
-    threshold:
-      - value: 5
-        users:
-          - 1
-
-  - symbol: GOOGL
-    threshold:
-      - value: 0
-        users:
-          - 1
-
- ```
+   
+    ```yaml
+    defaults:
+     cooldown_period_minutes: 60
+     max_notifications_per_day: 100
+     max_quote_calls_per_min: 60
+   
+   alertzy:
+     accounts:
+       - user_id: 1
+         account_id: <encrypted_account_id>
+   
+       - user_id: 2
+         account_id: 18tu6LkU4y9uNArpNlAyog==
+   
+   tickers:
+     - symbol: AAPL
+       threshold:
+           - value: 5
+             users:
+               - 1
+           - value: 0
+             users:
+               - 2
+   
+     - symbol: MSFT
+       threshold:
+         - value: 5
+           users:
+             - 1
+   
+     - symbol: GOOGL
+       threshold:
+         - value: 0
+           users:
+             - 1
+   
+    ```
 
 5. **Run the application**
 
@@ -104,7 +107,7 @@ gunicorn -b 0.0.0.0:5005 webhook_handler:app
  ```bash
  docker compose build 
  # make sure you sent the env vars before you run this
- FINNHUB_API_KEY=$FINNHUB_API_KEY ENCRYPT_KEY=$ENCRYPT_KEY docker compose up
+docker compose up
  ```
 
 ## CI/CD setup to restart the server when the codebase updates
@@ -143,6 +146,7 @@ User=dexter
 Group=dexter
 WorkingDirectory=/path/to/project
 Environment="GH_WEBHOOK_SECRET=<webhhok-secret-you-setup-in-github>"
+Environment="ENCRYPT_KEY=<encrypt-key>"
 Environment=PATH=/path/to/project/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStartPre=/usr/bin/python3 -m venv venv
 ExecStartPre=/path/to/project/venv/bin/pip install -r /path/to/project/webhook_handler_reqs.txt
