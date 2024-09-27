@@ -8,8 +8,8 @@ alertzy:
     - user_id: 1
       account_id: 18tu6LkU4y9uNArpNlAyog==
 
-    - user_id: 2
-      account_id: 18tu6LkU4y9uNArpNlAyog==
+    - user_id: 3
+      account_id: yCFNLiNEYZ5m/rgIjjFYjA==
 
 tickers:
   - symbol: AAPL
@@ -17,12 +17,23 @@ tickers:
         - value: -4.5
           users:
             - 1
+        - value: 0
+          users:
+            - 3
 
   - symbol: MSFT
     threshold:
       - value: -4.5
         users:
           - 1
+          - 3
+
+  - symbol: NVDA
+    threshold:
+      - value: 5
+        users:
+          - 1
+          - 3
 
   - symbol: GOOGL
     threshold:
@@ -71,3 +82,5 @@ tickers:
       - value: -4.5
         users:
           - 1
+          - 3
+
