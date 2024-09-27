@@ -107,7 +107,9 @@ gunicorn -b 0.0.0.0:5005 webhook_handler:app
  FINNHUB_API_KEY=$FINNHUB_API_KEY ENCRYPT_KEY=$ENCRYPT_KEY docker compose up
  ```
 
-### **Setup `webhook_handler.py` as system service**
+## CI/CD setup to restart the server when the codebase updates
+
+### **Setup `webhook_handler` as system service**
 
 1. Install `venv` for your python version
 ```commandline
@@ -122,12 +124,12 @@ python3 -m venv venv
 sudo chown -R <username>:<username> /path/to/project/venv
 ```
 
-4. To run the server on boot as daemon we need to set up a system service
+4. Create a system service to run the server on boot as daemon
 
 ```
 sudo vim /etc/systemd/system/stocklerts_webhook_handler.service
 ```
-- Add the following content
+
 ```commandline
 [Unit]
 Description=Stocklerts Webhook Handler
@@ -167,4 +169,52 @@ sudo systemctl enable stocklerts_webhook_handler
 journalctl -u stocklerts_webhook_handler.service -f
 ```
 
+### **Tunnel `webhook_handler` using `ngrok`**
 
+1. Setup [ngrok account](https://dashboard.ngrok.com/get-started/your-authtoken) and add your config to the file
+- Create `ngrok` config file in home directory
+```commandline
+vim ~/ngrok.yml
+```
+```commandline
+authtoken: <auth-token>
+version: 1
+tunnels:
+  stocklerts:
+    proto: http
+    addr: 5005
+    hostname: <your-static-domain>
+```
+
+2. Create a system service to run the server on boot as daemon
+```
+sudo vim /etc/systemd/system/ngrok_tunnel.service
+```
+```commandline
+[Unit]
+Description=Ngrok Tunnel for Stocklerts
+After=network.target
+
+[Service]
+ExecStart=/snap/bin/ngrok start --config /home/dexter/ngrok.yml stocklerts
+Restart=on-failure
+User=dexter
+
+[Install]
+WantedBy=multi-user.target
+```
+
+- Update the service
+```commandline
+sudo systemctl daemon-reload
+```
+
+- Start the service
+```commandline
+sudo systemctl start ngrok_tunnel.service
+```
+
+- Enable the service to start at boot
+```commandline
+sudo systemctl enable ngrok_tunnel
+```

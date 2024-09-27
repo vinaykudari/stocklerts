@@ -13,17 +13,6 @@ services:
     networks:
       - app-network
 
-  ngrok:
-    container_name: stocklerts-ngrok
-    image: ngrok/ngrok:latest
-    ports:
-      - "4040:4040"
-    environment:
-      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-    command: http host.docker.internal:5001 --domain=usable-perch-smoothly.ngrok-free.app
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge
