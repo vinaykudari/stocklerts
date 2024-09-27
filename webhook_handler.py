@@ -30,8 +30,8 @@ def webhook():
 
     if request.json['ref'] == 'refs/heads/main':
         subprocess.run(['git', 'pull', 'origin', 'main'], check=True)
-        subprocess.run(['docker', 'compose', 'stop'], check=True)
-        subprocess.run(['docker', 'compose', 'up', '--build', '-d'], check=True)
+        subprocess.run(['docker-compose', 'stop'], check=True)
+        subprocess.run(['docker-compose', 'up', '--build', '-d'], check=True)
         return 'OK', 200
 
     return 'Not main branch', 200
