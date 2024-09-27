@@ -196,9 +196,9 @@ Description=Ngrok Tunnel for Stocklerts
 After=network.target
 
 [Service]
-ExecStart=/snap/bin/ngrok start --config /home/dexter/ngrok.yml stocklerts
+ExecStart=/snap/bin/ngrok start --config /home/<username>/ngrok.yml stocklerts
 Restart=on-failure
-User=dexter
+User=<username>
 
 [Install]
 WantedBy=multi-user.target
