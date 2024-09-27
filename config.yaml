@@ -17,7 +17,7 @@ tickers:
         - value: 5
           users:
             - 1
-        - value: -0.3
+        - value: 0
           users:
             - 2
 
