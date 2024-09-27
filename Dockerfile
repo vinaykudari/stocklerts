@@ -15,4 +15,6 @@ COPY app ./app
 
 RUN poetry install --no-interaction --no-ansi
 
+RUN mkdir -p /app/logs
+
 CMD ["poetry", "run", "python", "-m", "app.main"]
