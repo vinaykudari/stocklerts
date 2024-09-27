@@ -37,16 +37,16 @@ A Python-based stock alerting service that monitors prices (One symbol/sec) usin
     Register at [finnhub](https://finnhub.io) and set the key:
 
     ```dotenv
-    FINNHUB_API_KEY=<your-finnhub-api-key>
+    export FINNHUB_API_KEY="<your-finnhub-api-key>"
     ```
-   - Gail residents use our wifi passsword twice `<password><password>` to encrypt your account id
-   - Encrypt your Alertz account id at [devglan.com](https://www.devglan.com/online-tools/aes-encryption-decryption) using the exact same settings and set the passcode as env var
-   <br><br>
-   ![img.png](resources/img.png)
+- Gail residents use our wifi passsword twice `<password><password>` to encrypt your account id
+- Encrypt your Alertz account id at [devglan.com](https://www.devglan.com/online-tools/aes-encryption-decryption) using the exact same settings and set the passcode as env var
+<br><br>
+![img.png](resources/img.png)
       
-   ```dotenv
-       ENCRYPT_KEY=<encrypt-key>
-   ```
+  ```dotenv
+      export ENCRYPT_KEY="<encrypt-key>"
+  ```
    
 4. **Configure Application**
 
@@ -147,6 +147,7 @@ Group=dexter
 WorkingDirectory=/path/to/project
 Environment="GH_WEBHOOK_SECRET=<webhhok-secret-you-setup-in-github>"
 Environment="ENCRYPT_KEY=<encrypt-key>"
+Environment="FINNHUB_API_KEY=<your-finnhub-api-key>"
 Environment=PATH=/path/to/project/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStartPre=/usr/bin/python3 -m venv venv
 ExecStartPre=/path/to/project/venv/bin/pip install -r /path/to/project/webhook_handler_reqs.txt
