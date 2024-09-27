@@ -111,6 +111,8 @@ gunicorn -b 0.0.0.0:5005 webhook_handler:app
 
 ### **Setup `webhook_handler` as system service**
 
+0. Setup webhook in github repository
+
 1. Install `venv` for your python version
 ```commandline
 sudo apt install python3.10-venv
@@ -140,6 +142,7 @@ Type=simple
 User=dexter
 Group=dexter
 WorkingDirectory=/path/to/project
+Environment="GH_WEBHOOK_SECRET=<webhhok-secret-you-setup-in-github>"
 Environment=PATH=/path/to/project/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStartPre=/usr/bin/python3 -m venv venv
 ExecStartPre=/path/to/project/venv/bin/pip install -r /path/to/project/webhook_handler_reqs.txt
