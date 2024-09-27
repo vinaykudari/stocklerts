@@ -9,7 +9,7 @@ services:
     environment:
       FINNHUB_API_KEY: "${FINNHUB_API_KEY}"
       ENCRYPT_KEY: "${ENCRYPT_KEY}"
-    restart: unless-stopped
+    restart: always
     networks:
       - app-network
 
