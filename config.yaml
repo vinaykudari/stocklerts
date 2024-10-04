@@ -14,30 +14,28 @@ alertzy:
 tickers:
   - symbol: AAPL
     threshold:
-        - value: -4.5
+        - value: -4
           users:
             - 1
-        - value: -5
-          users:
             - 3
 
   - symbol: MSFT
     threshold:
-      - value: -4.5
+      - value: -4
         users:
           - 1
           - 3
 
   - symbol: NVDA
     threshold:
-      - value: 5
+      - value: -4
         users:
           - 1
           - 3
 
   - symbol: GOOGL
     threshold:
-      - value: -4.5
+      - value: -4
         users:
           - 1
 
@@ -49,15 +47,17 @@ tickers:
 
   - symbol: META
     threshold:
-      - value: -4.5
+      - value: -4
         users:
           - 1
+          - 3
 
   - symbol: TSLA
     threshold:
-      - value: -4.5
+      - value: -4
         users:
           - 1
+          - 3
 
   - symbol: BMBL
     threshold:
@@ -67,20 +67,77 @@ tickers:
 
   - symbol: COST
     threshold:
-      - value: -4.5
-        users:
-          - 1
-
-  - symbol: PCG
-    threshold:
-      - value: -4.5
-        users:
-          - 1
-
-  - symbol: TSM
-    threshold:
-      - value: -5
+      - value: -4
         users:
           - 1
           - 3
 
+  - symbol: PCG
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
+          
+  - symbol: TSM
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
+
+  - symbol: QCOM
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
+
+  - symbol: ABNB
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
+
+  - symbol: AMD
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
+
+  - symbol: RDDT
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
+
+  - symbol: PLTR
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
+
+  - symbol: CRWD
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
+
+  - symbol: MDB
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
+
+  - symbol: DASH
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
