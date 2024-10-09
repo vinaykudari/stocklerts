@@ -21,7 +21,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict,
 
     for symbol in ticker_config:
         ticker_queue.put(symbol)
-        logging.info(f'Added ticker to queue: {symbol}')
+        logging.debug(f'Added ticker to queue: {symbol}')
 
     scheduler.add_job(
         func=check_stock_price_change,
