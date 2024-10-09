@@ -23,11 +23,11 @@ def check_stock_price_change(ticker_config: dict, ticker_queue: Queue, finnhub_c
     quote = fetch_quote(ticker, finnhub_client)
     current_price, prev_close, percentage_change = quote['c'], quote['pc'], quote['dp']
 
-    # logging.debug(
-    #     f"Ticker: {ticker}, Current Price: {current_price}, "
-    #     f"Previous close: {prev_close}, Percentage Change: {percentage_change}%"
-    # )
-    # logging.debug(f'ticker_config[{ticker}] = {ticker_config[ticker]}')
+    logging.debug(
+        f"Ticker: {ticker}, Current Price: {current_price}, "
+        f"Previous close: {prev_close}, Percentage Change: {percentage_change}%"
+    )
+    logging.debug(f'ticker_config[{ticker}] = {ticker_config[ticker]}')
 
     users_to_notify = set()
 
@@ -76,5 +76,5 @@ def check_stock_price_change(ticker_config: dict, ticker_queue: Queue, finnhub_c
                 db_manager.set_ticker_alerted(user_id, ticker, datetime.utcnow())
                 db_manager.increment_notification_count(user_id)
 
-    # logging.debug(f'Putting ticker {ticker} back in queue')
+    logging.debug(f'Putting ticker {ticker} back in queue')
     ticker_queue.put(ticker)
