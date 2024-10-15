@@ -6,6 +6,7 @@ from typing import Any
 from datetime import datetime, timedelta
 from app.alerts.notifier import send_notification
 from app.database.db_manager import DBManager
+from app.utils.rate_limiter import is_market_open, state_tracker
 
 
 def fetch_quote(ticker: str, finnhub_client) -> dict[Any, Any] | Any:
@@ -17,8 +18,12 @@ def fetch_quote(ticker: str, finnhub_client) -> dict[Any, Any] | Any:
         return defaultdict(int)
 
 
+@state_tracker
 def check_stock_price_change(ticker_config: dict, user_notify_thresh: dict, ticker_queue: Queue,
                              finnhub_client, db_manager: DBManager, max_notifications: int) -> None:
+    if not is_market_open():
+        return
+
     ticker = ticker_queue.get()
     quote = fetch_quote(ticker, finnhub_client)
     current_price, prev_close, percentage_change = quote['c'], quote['pc'], quote['dp']
