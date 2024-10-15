@@ -2,6 +2,7 @@ logs
 stockalerts.db
 .ipynb_checkpoints
 notebook.ipynb
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

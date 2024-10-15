@@ -1,4 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
+import datetime
+
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Float
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from datetime import date
 from sqlalchemy.orm import scoped_session
@@ -30,7 +32,7 @@ class TickerState(Base):
     user_id = Column(String, nullable=False)
     ticker = Column(String, nullable=False)
     alerted = Column(Boolean, default=False)
-    last_alert_time = Column(DateTime, nullable=True)
+    last_alert_thresh = Column(Float, nullable=True)
 
 
 class DBManager:
@@ -62,13 +64,13 @@ class DBManager:
                 state = TickerState(user_id=user_id, ticker=ticker)
                 session.add(state)
                 session.commit()
-            return state.alerted, state.last_alert_time
+            return state.alerted, state.last_alert_thresh
 
-    def set_ticker_alerted(self, user_id: str, ticker: str, timestamp):
+    def set_ticker_alerted(self, user_id: str, ticker: str, thresh: float):
         session = self.Session()
         state = session.query(TickerState).filter_by(user_id=user_id, ticker=ticker).first()
         state.alerted = True
-        state.last_alert_time = timestamp
+        state.last_alert_thresh = thresh
         session.commit()
         session.close()
 
@@ -76,7 +78,7 @@ class DBManager:
         session = self.Session()
         state = session.query(TickerState).filter_by(user_id=user_id, ticker=ticker).first()
         state.alerted = False
-        state.last_alert_time = None
+        state.last_alert_thresh = None
         session.commit()
         session.close()
 
