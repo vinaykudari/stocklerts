@@ -43,7 +43,7 @@ tickers:
 
   - symbol: GAP
     threshold:
-      - value: 10
+      - value: 3
         users:
           - 1
 
@@ -56,14 +56,14 @@ tickers:
 
   - symbol: TSLA
     threshold:
-      - value: -10
+      - value: -4
         users:
           - 1
           - 3
 
   - symbol: BMBL
     threshold:
-      - value: -4.5
+      - value: -4
         users:
           - 1
 
