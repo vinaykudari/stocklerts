@@ -30,9 +30,9 @@ def state_tracker(func):
 
         if wrapper.previous_state != current_state:
             if current_state:
-                logging.info("Market is now OPEN. Starting stock price checks.")
+                logging.warning("Market is now OPEN. Starting stock price checks.")
             else:
-                logging.info("Market is now CLOSED. Stopping stock price checks.")
+                logging.warning("Market is now CLOSED. Stopping stock price checks.")
             wrapper.previous_state = current_state
 
         return func(*args, **kwargs)
