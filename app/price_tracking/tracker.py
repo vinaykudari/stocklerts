@@ -17,8 +17,8 @@ def fetch_quote(ticker: str, finnhub_client) -> dict[Any, Any] | Any:
         return defaultdict(int)
 
 
-def check_stock_price_change(ticker_config: dict, ticker_queue: Queue, finnhub_client, db_manager: DBManager,
-                             cooldown_minutes: int, max_notifications: int) -> None:
+def check_stock_price_change(ticker_config: dict, user_notify_thresh: dict, ticker_queue: Queue,
+                             finnhub_client, db_manager: DBManager, max_notifications: int) -> None:
     ticker = ticker_queue.get()
     quote = fetch_quote(ticker, finnhub_client)
     current_price, prev_close, percentage_change = quote['c'], quote['pc'], quote['dp']
@@ -56,14 +56,15 @@ def check_stock_price_change(ticker_config: dict, ticker_queue: Queue, finnhub_c
                 continue
 
             # cooldown notifications
-            alerted, last_alert_time = db_manager.get_ticker_state(user_id, ticker)
+            alerted, last_alert_thresh = db_manager.get_ticker_state(user_id, ticker)
             if alerted:
-                if last_alert_time:
-                    time_since_last_alert = datetime.utcnow() - last_alert_time
-                    if time_since_last_alert < timedelta(minutes=cooldown_minutes):
-                        message = f'Cooldown active for {ticker} to user {user_id}.'
-                        logging.info(message)
-                        continue
+                if last_alert_thresh:
+                    if threshold < 0:
+                        if percentage_change > last_alert_thresh - user_notify_thresh[user_id]:
+                            continue
+                    else:
+                        if percentage_change < last_alert_thresh + user_notify_thresh[user_id]:
+                            continue
 
             users_to_notify.add(user_id)
 
@@ -73,7 +74,7 @@ def check_stock_price_change(ticker_config: dict, ticker_queue: Queue, finnhub_c
         logging.info(f'For {ticker} notifying {list(users_to_notify)}')
         if send_notification(message, users_to_notify):
             for user_id in users_to_notify:
-                db_manager.set_ticker_alerted(user_id, ticker, datetime.utcnow())
+                db_manager.set_ticker_alerted(user_id, ticker, percentage_change)
                 db_manager.increment_notification_count(user_id)
 
     logging.debug(f'Putting ticker {ticker} back in queue')

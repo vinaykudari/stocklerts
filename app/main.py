@@ -28,6 +28,14 @@ def setup_logging(log_file: str) -> None:
 
 def main() -> None:
     config = load_config('config.yaml')
+    accounts = config['alertzy']['accounts']
+    user_notify_thresh = {}
+
+    for account in accounts:
+        user_id = account['user_id']
+        thresh = account['notify_thresh']
+        user_notify_thresh[user_id] = thresh
+
     setup_logging('logs/app.log')
 
     db_manager = DBManager()
@@ -45,6 +53,7 @@ def main() -> None:
     start_scheduler(
         db_manager,
         ticker_config,
+        user_notify_thresh,
         cooldown_minutes,
         max_notifications,
         max_quote_calls_per_min

@@ -10,7 +10,7 @@ import os
 from app.price_tracking.tracker import check_stock_price_change
 
 
-def start_scheduler(db_manager: DBManager, ticker_config: dict,
+def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thresh: dict,
                     cooldown_minutes: int = 60, max_notifications: int = 100,
                     max_quote_calls_per_min: int = 60) -> None:
     finnhub_client = finnhub.Client(api_key=os.getenv('FINNHUB_API_KEY'))
@@ -26,7 +26,8 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict,
     scheduler.add_job(
         func=check_stock_price_change,
         trigger=IntervalTrigger(seconds=interval_seconds),
-        args=[ticker_config, ticker_queue, finnhub_client, db_manager, cooldown_minutes, max_notifications],
+        args=[ticker_config, user_notify_thresh, ticker_queue, finnhub_client,
+              db_manager, cooldown_minutes, max_notifications],
         id=f'job_check_stock_price_change',
         replace_existing=True
     )
