@@ -41,7 +41,6 @@ def main() -> None:
     db_manager = DBManager()
 
     max_quote_calls_per_min = config['defaults'].get('max_quote_calls_per_min', 60)
-    cooldown_minutes = config['defaults'].get('cooldown_period_minutes', 60)
     max_notifications = config['defaults'].get('max_notifications_per_day', 100)
 
     ticker_config = {}
@@ -54,7 +53,6 @@ def main() -> None:
         db_manager,
         ticker_config,
         user_notify_thresh,
-        cooldown_minutes,
         max_notifications,
         max_quote_calls_per_min
     )
