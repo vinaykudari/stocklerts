@@ -14,7 +14,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
                     max_notifications: int = 100, max_quote_calls_per_min: int = 60) -> None:
     finnhub_client = finnhub.Client(api_key=os.getenv('FINNHUB_API_KEY'))
     scheduler = BackgroundScheduler()
-    interval_seconds = max_quote_calls_per_min // 60
+    interval_seconds = (max_quote_calls_per_min // 60) + 1  # add some buffer
 
     ticker_queue = Queue()
 
