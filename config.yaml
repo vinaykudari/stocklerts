@@ -143,3 +143,10 @@ tickers:
         users:
           - 1
           - 3
+
+  - symbol: ADBE
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
