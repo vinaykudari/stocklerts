@@ -157,3 +157,10 @@ tickers:
         users:
           - 1
           - 3
+
+  - symbol: CEG
+    threshold:
+      - value: -4
+        users:
+          - 1
+          - 3
