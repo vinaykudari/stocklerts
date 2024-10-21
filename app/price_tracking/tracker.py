@@ -3,7 +3,6 @@ from collections import defaultdict
 from queue import Queue
 from typing import Any
 
-from datetime import datetime, timedelta
 from app.alerts.notifier import send_notification
 from app.database.db_manager import DBManager
 from app.utils.rate_limiter import is_market_open, state_tracker
