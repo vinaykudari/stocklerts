@@ -5,7 +5,9 @@ from typing import Any
 
 from app.alerts.notifier import send_notification
 from app.database.db_manager import DBManager
-from app.utils.rate_limiter import is_market_open, state_tracker
+from app.utils.helper import is_market_open, state_tracker, heartbeat, load_config
+
+config = load_config('config.yaml')
 
 
 def fetch_quote(ticker: str, finnhub_client) -> dict[Any, Any] | Any:
@@ -17,6 +19,7 @@ def fetch_quote(ticker: str, finnhub_client) -> dict[Any, Any] | Any:
         return defaultdict(int)
 
 
+@heartbeat(config['heartbeat']['url'])
 @state_tracker
 def check_stock_price_change(ticker_config: dict, user_notify_thresh: dict, ticker_queue: Queue,
                              finnhub_client, db_manager: DBManager, max_notifications: int) -> None:
