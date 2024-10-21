@@ -37,7 +37,7 @@ def webhook():
     return 'Not main branch', 200
 
 
-@app.route('/health', methods=['POST'])
+@app.route('/health', methods=['GET'])
 def health():
     return {'status': 'OK'}, 200
 
