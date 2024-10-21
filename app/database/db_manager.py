@@ -18,7 +18,7 @@ class User(Base):
     last_notification_date = Column(DateTime, nullable=True)
 
     def reset_daily_count(self):
-        if self.last_notification_date < date.today():
+        if not self.last_notification_date or self.last_notification_date < date.today():
             self.notification_count = 0
             self.last_notification_date = date.today()
 
