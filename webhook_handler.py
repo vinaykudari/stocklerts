@@ -37,5 +37,10 @@ def webhook():
     return 'Not main branch', 200
 
 
+@app.route('/health', methods=['POST'])
+def health():
+    return {'status': 'OK'}, 200
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5005)
