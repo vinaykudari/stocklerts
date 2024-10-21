@@ -2,9 +2,9 @@ import logging
 import os
 
 import requests
-import yaml
 
 from app.utils.crypto import decrypt
+from app.utils.helper import load_config
 
 
 def send_push_notification(message: str, title: str, account_key: str) -> bool:
@@ -30,7 +30,7 @@ def send_push_notification(message: str, title: str, account_key: str) -> bool:
 
 
 def send_notification(message: str, users: set) -> bool:
-    config = load_config()
+    config = load_config('config.yaml')
     accounts = config['alertzy']['accounts']
     title = 'Stocklert'
     account_ids = []
@@ -43,8 +43,3 @@ def send_notification(message: str, users: set) -> bool:
     account_key = '_'.join(account_ids)
     status = send_push_notification(message, title, account_key)
     return status
-
-
-def load_config() -> dict:
-    with open('config.yaml', 'r') as file:
-        return yaml.safe_load(file)

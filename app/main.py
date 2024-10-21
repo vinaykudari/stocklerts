@@ -1,29 +1,8 @@
-import os
 import logging
-import yaml
 
 from app.scheduler.job_scheduler import start_scheduler
 from app.database.db_manager import DBManager
-
-
-def load_config(config_path: str) -> dict:
-    with open(config_path, 'r') as file:
-        return yaml.safe_load(file)
-
-
-def setup_logging(log_file: str) -> None:
-    log_dir = os.path.dirname(log_file)
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
-    logging.basicConfig(
-        level=logging.WARNING,
-        format='%(asctime)s [%(levelname)s] %(message)s',
-        handlers=[
-            logging.FileHandler(log_file),
-            logging.StreamHandler()
-        ]
-    )
+from app.utils.helper import load_config, setup_logging
 
 
 def main() -> None:

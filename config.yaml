@@ -3,6 +3,9 @@ defaults:
   max_notifications_per_day: 100
   max_quote_calls_per_min: 60
 
+heartbeat:
+  url: https://uptime.betterstack.com/api/v1/heartbeat/E6cwqjfF4G7ZzgzFzNo2Uku2
+
 alertzy:
   accounts:
     - user_id: 1
