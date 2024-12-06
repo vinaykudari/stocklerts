@@ -181,3 +181,59 @@ tickers:
         users:
           - 1
           - 3
+          
+  - symbol: AI
+    threshold:
+      - value: -3
+        users:
+          - 1
+          - 3
+
+  - symbol: BE
+    threshold:
+      - value: -3
+        users:
+          - 1
+          - 3
+
+  - symbol: TRP
+    threshold:
+      - value: -3
+        users:
+          - 1
+          - 3
+
+  - symbol: GETY
+    threshold:
+      - value: -3
+        users:
+          - 1
+          - 3
+
+  - symbol: PERF
+    threshold:
+      - value: -3
+        users:
+          - 1
+          - 3
+
+  - symbol: BBAI
+    threshold:
+      - value: -3
+        users:
+          - 1
+          - 3
+
+  - symbol: ADBE
+    threshold:
+      - value: -3
+        users:
+          - 1
+          - 3
+
+  - symbol: GRND
+    threshold:
+      - value: -3
+        users:
+          - 1
+          - 3
