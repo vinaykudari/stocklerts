@@ -8,6 +8,10 @@ from datetime import datetime, time
 import requests
 import yaml
 
+from concurrent.futures import ThreadPoolExecutor
+
+executor = ThreadPoolExecutor(max_workers=1)
+
 MARKET_OPEN_TIME = time(9, 30)
 MARKET_CLOSE_TIME = time(16, 0)
 MARKET_TIMEZONE = pytz.timezone('US/Eastern')
@@ -66,15 +70,19 @@ def state_tracker(func):
 
 def heartbeat(url: str):
     def decorator(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
-            try:
-                response = requests.get(url)
-                if response.status_code == 200:
-                    logging.debug(f'Heartbeat sent successfully to {url}')
-                else:
-                    logging.error(f'Failed to send heartbeat to {url}. Status Code: {response.status_code}')
-            except Exception as e:
-                logging.error(f'Exception occurred while sending heartbeat: {e}')
+            def send_heartbeat():
+                try:
+                    response = requests.get(url)
+                    if response.status_code == 200:
+                        logging.debug(f'Heartbeat sent successfully to {url}')
+                    else:
+                        logging.error(f'Failed to send heartbeat to {url}. Status Code: {response.status_code}')
+                except Exception as e:
+                    logging.error(f'Exception occurred while sending heartbeat: {e}')
+
+            executor.submit(send_heartbeat)
 
             return func(*args, **kwargs)
 
