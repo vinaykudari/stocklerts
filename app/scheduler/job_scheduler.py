@@ -27,6 +27,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
         trigger=IntervalTrigger(seconds=interval_seconds),
         args=[ticker_config, user_notify_thresh, ticker_queue, finnhub_client, db_manager, max_notifications],
         id=f'job_check_stock_price_change',
+        max_instances=3,
         replace_existing=True
     )
     logging.warning(f'Stock price tracker scheduled')
@@ -37,6 +38,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
         hour=0,
         minute=0,
         id='reset_daily_counters',
+        max_instances=3,
         replace_existing=True
     )
 
