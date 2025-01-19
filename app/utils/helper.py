@@ -87,9 +87,9 @@ def heartbeat(url: str, interval: int = 5):
                         try:
                             response = requests.get(url)
                             if response.status_code == 200:
-                                logging.warning(f'Heartbeat sent successfully to {url}')
+                                logging.debug(f'Heartbeat sent successfully to {url}')
                             else:
-                                logging.error(f'Failed to send heartbeat to {url}. Status Code: {response.status_code}')
+                                logging.warning(f'Failed to send heartbeat to {url}. Status Code: {response.status_code}')
                         except Exception as e:
                             logging.error(f'Exception occurred while sending heartbeat: {e}')
 
