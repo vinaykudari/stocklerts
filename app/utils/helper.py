@@ -3,7 +3,7 @@ from functools import wraps
 import threading
 import logging
 import pytz
-from datetime import datetime
+from datetime import datetime, time as dt_time
 import time
 
 import requests
@@ -13,8 +13,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 executor = ThreadPoolExecutor(max_workers=1)
 
-MARKET_OPEN_TIME = time(9, 30)
-MARKET_CLOSE_TIME = time(16, 0)
+MARKET_OPEN_TIME = dt_time(9, 30)
+MARKET_CLOSE_TIME = dt_time(16, 0)
 MARKET_TIMEZONE = pytz.timezone('US/Eastern')
 
 
