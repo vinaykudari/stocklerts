@@ -3,7 +3,8 @@ from functools import wraps
 import threading
 import logging
 import pytz
-from datetime import datetime, time
+from datetime import datetime
+import time
 
 import requests
 import yaml
