@@ -1,6 +1,6 @@
 import os
 from functools import wraps
-
+import threading
 import logging
 import pytz
 from datetime import datetime, time
@@ -68,24 +68,33 @@ def state_tracker(func):
     return wrapper
 
 
-def heartbeat(url: str):
+def heartbeat(url: str, interval: int = 5):
+    last_sent = 0.0
+    lock = threading.Lock()
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            def send_heartbeat():
-                try:
-                    response = requests.get(url)
-                    if response.status_code == 200:
-                        logging.debug(f'Heartbeat sent successfully to {url}')
-                    else:
-                        logging.error(f'Failed to send heartbeat to {url}. Status Code: {response.status_code}')
-                except Exception as e:
-                    logging.error(f'Exception occurred while sending heartbeat: {e}')
+            nonlocal last_sent
+            current_time = time.time()
 
-            executor.submit(send_heartbeat)
+            with lock:
+                if current_time - last_sent >= interval:
+                    last_sent = current_time
+
+                    def send_heartbeat():
+                        try:
+                            response = requests.get(url)
+                            if response.status_code == 200:
+                                logging.debug(f'Heartbeat sent successfully to {url}')
+                            else:
+                                logging.error(f'Failed to send heartbeat to {url}. Status Code: {response.status_code}')
+                        except Exception as e:
+                            logging.error(f'Exception occurred while sending heartbeat: {e}')
+
+                    executor.submit(send_heartbeat)
 
             return func(*args, **kwargs)
-
         return wrapper
-
     return decorator
+
