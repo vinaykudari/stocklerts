@@ -3,6 +3,7 @@ name = "stocklerts"
 version = "0.1.0"
 description = "A stock price alert tracker that notifies users based on price changes."
 authors = ["Vinay Kudari <vinay.kudari30@gmail.com>"]
+packages = [{ include = "app" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
