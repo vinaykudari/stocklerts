@@ -19,7 +19,7 @@ alertzy:
 tickers:
   - symbol: AAPL
     threshold:
-        - value: -2
+        - value: 1
           users:
             - 1
             - 3
