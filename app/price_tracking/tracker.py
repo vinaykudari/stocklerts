@@ -55,7 +55,6 @@ def check_stock_price_change(ticker_config: dict, user_notify_thresh: dict, tick
             if user_notification_count == 0.9 * max_notifications:
                 message = f'User {user_id} has almost reached the daily notification limit.'
                 logging.info(message)
-                send_notification(message, {user_id})
 
             # notification count check: alertz limitation
             if user_notification_count >= max_notifications:
