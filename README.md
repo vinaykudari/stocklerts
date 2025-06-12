@@ -99,9 +99,14 @@ A Python-based stock alerting service that monitors prices (One symbol/sec) usin
 gunicorn -b 0.0.0.0:5005 webhook_handler:app
  ```
 - Start the app server
- ```bash
- poetry run python -m app.main
- ```
+```bash
+poetry run python -m app.main
+```
+- A health check endpoint is available once the app server starts:
+```bash
+curl http://localhost:8000/health
+```
+This returns `{"status": "OK"}` when the service is running.
 
 - Alternatively, use docker
  ```bash
