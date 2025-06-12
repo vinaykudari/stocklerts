@@ -2,12 +2,17 @@ import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 import finnhub
 from queue import Queue
 from app.database.db_manager import DBManager
 import os
 
 from app.price_tracking.tracker import check_stock_price_change
+from app.recommendations.daily_recommender import (
+    get_daily_recommendations,
+    send_daily_performance,
+)
 
 
 def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thresh: dict,
@@ -40,6 +45,24 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
         id='reset_daily_counters',
         max_instances=3,
         replace_existing=True
+    )
+
+    scheduler.add_job(
+        func=get_daily_recommendations,
+        trigger=CronTrigger(hour=9, minute=30, timezone='US/Eastern'),
+        args=[finnhub_client],
+        id='daily_recommendations',
+        max_instances=1,
+        replace_existing=True,
+    )
+
+    scheduler.add_job(
+        func=send_daily_performance,
+        trigger=CronTrigger(hour=16, minute=0, timezone='US/Eastern'),
+        args=[finnhub_client],
+        id='daily_performance',
+        max_instances=1,
+        replace_existing=True,
     )
 
     scheduler.start()

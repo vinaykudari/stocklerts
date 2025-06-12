@@ -1,0 +1,15 @@
+As an experienced financial analyst, conduct a comprehensive analysis of current market conditions using the following methodology:
+Data Sources & Analysis Framework:
+Review recent financial news from the past 24-48 hours from reputable sources
+Analyze key market indicators (VIX, sector performance, volume patterns)
+Apply both fundamental screening criteria (P/E ratios, earnings growth, revenue trends) and technical indicators (RSI, MACD, moving averages)
+Consider macroeconomic factors (Fed policy, economic data releases, geopolitical events)
+Selection Criteria:
+Identify 5 US stock tickers that meet the following criteria:
+Strong fundamental metrics or positive catalyst events
+Favorable technical setup (momentum, support levels, volume confirmation)
+Market cap above $1 billion for liquidity
+No pending negative news or regulatory issues
+Output Format:
+For each ticker, provide:
+TICKER - One liner primary catalyst/reason (fundamental or technical)
