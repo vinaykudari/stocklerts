@@ -7,6 +7,12 @@ from datetime import timedelta, date
 from app.price_tracking.tracker import check_stock_price_change
 
 
+@pytest.fixture(autouse=True)
+def mock_market_open_and_heartbeat(mocker):
+    mocker.patch('app.price_tracking.tracker.is_market_open', return_value=True)
+    mocker.patch('requests.get')
+
+
 @pytest.fixture
 def mock_finnhub_client(mocker):
     return mocker.Mock()

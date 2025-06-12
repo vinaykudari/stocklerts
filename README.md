@@ -108,7 +108,16 @@ gunicorn -b 0.0.0.0:5005 webhook_handler:app
  docker compose build 
  # make sure you sent the env vars before you run this
 docker compose up
- ```
+```
+
+### Docker Hub Deployment
+
+A GitHub Actions workflow automatically builds and publishes a Docker image
+whenever changes are merged into the `main` branch. Pull the latest image with:
+
+```bash
+docker pull vinaykudari/stocklerts:latest
+```
 
 ## CI/CD setup to restart the server when the codebase updates
 
