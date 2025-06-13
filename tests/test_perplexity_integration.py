@@ -5,7 +5,6 @@ import finnhub
 from app.recommendations import daily_recommender as dr
 
 
-@pytest.mark.integration
 def test_perplexity_api_triggers_notification(monkeypatch):
     api_key = os.getenv('PERPLEXITY_API_KEY')
     model = os.getenv('PERPLEXITY_MODEL')
