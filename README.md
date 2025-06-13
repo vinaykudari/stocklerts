@@ -29,7 +29,7 @@ A Python-based stock alerting service that monitors prices (One symbol/sec) usin
 2. **Install Dependencies**
 
     ```bash
-    poetry install
+    uv pip install
     ```
 
 3. **Configure Environment Variables**
@@ -100,7 +100,7 @@ gunicorn -b 0.0.0.0:5005 webhook_handler:app
  ```
 - Start the app server
 ```bash
-poetry run python -m app.main
+uv run python -m app.main
 ```
 - A health check endpoint is available once the app server starts:
 ```bash

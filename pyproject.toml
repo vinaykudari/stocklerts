@@ -1,27 +1,34 @@
-[tool.poetry]
+[project]
 name = "stocklerts"
 version = "0.1.0"
 description = "A stock price alert tracker that notifies users based on price changes."
-authors = ["Vinay Kudari <vinay.kudari30@gmail.com>"]
-packages = [{ include = "app" }]
+authors = [
+    { name = "Vinay Kudari", email = "vinay.kudari30@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "finnhub-python>=2.4.20",
+    "APScheduler>=3.9.1",
+    "PyYAML>=6.0",
+    "requests>=2.31.0",
+    "SQLAlchemy>=2",
+    "python-dotenv>=1.0.0",
+    "cryptography>=43.0.1",
+    "pytz>=2024.1",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-finnhub-python = "^2.4.20"
-APScheduler = "^3.9.1"
-PyYAML = "^6.0"
-requests = "^2.31.0"
-SQLAlchemy = "^2"
-python-dotenv = "^1.0.0"
-cryptography = "^43.0.1"
-
-[tool.poetry.dev-dependencies]
-pytest = "^8.3.3"
-pytest-mock = "^3.10.0"
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "pytest-mock>=3.10.0",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
