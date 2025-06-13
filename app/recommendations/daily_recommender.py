@@ -1,6 +1,7 @@
 import logging
 from typing import List, Dict
 
+import re
 import os
 import finnhub
 import requests
@@ -30,10 +31,17 @@ PROMPT = _load_prompt()
 
 
 def _clean_output(text: str) -> str:
-    if '</think>' in text:
-        text = text.split('</think>', 1)[1]
-    elif '<think>' in text:
-        text = text.split('<think>', 1)[1]
+    text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)
+    text = re.sub(r'`(.*?)`', r'\1', text)
+    text = re.sub(r'\|[^|]*\|', '', text)
+    text = re.sub(r'^#+\s+.*$', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^-+$', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^\*\s+.*$', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\[\d+\]', '', text)
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'\n\s+\n', '\n', text)
     return text.strip()
 
 
@@ -41,10 +49,13 @@ def parse_recommendations(text: str) -> List[Dict[str, str]]:
     text = _clean_output(text)
     recs = []
     for line in text.splitlines():
-        if '-' in line:
-            symbol, reason = line.split('-', 1)
-            recs.append({'symbol': symbol.strip(), 'reason': reason.strip()})
-    return recs[:5]
+        m = re.match(r'^([A-Z]{1,5})\s*-\s*(.+)$', line.strip())
+        if m:
+            symbol, reason = m.groups()
+            recs.append({'symbol': symbol, 'reason': reason[:60].strip()})
+        if len(recs) == 5:
+            break
+    return recs
 
 
 def query_perplexity(prompt: str) -> str:
