@@ -6,15 +6,16 @@ ARG ENCRYPT_KEY
 ENV FINNHUB_API_KEY=${FINNHUB_API_KEY}
 ENV ENCRYPT_KEY=${ENCRYPT_KEY}
 
-RUN pip install poetry
+RUN pip install uv
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock config.yaml ./
+COPY pyproject.toml uv.lock config.yaml ./
 COPY app ./app
+COPY resources ./resources
 
-RUN poetry install --no-interaction --no-ansi
+RUN uv pip install --system .
 
 RUN mkdir -p /app/logs
 
-CMD ["poetry", "run", "python", "-m", "app.main"]
+CMD ["python", "-m", "app.main"]
