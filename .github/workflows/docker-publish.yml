@@ -26,3 +26,12 @@ jobs:
           context: .
           push: true
           tags: vinaykudari/stocklerts:latest
+
+      - name: Install Koyeb CLI
+        run: |
+          curl -L https://github.com/koyeb/koyeb-cli/releases/download/v5.5.1/koyeb-cli_5.5.1_linux_amd64.tar.gz -o koyeb.tar.gz
+          tar -xzf koyeb.tar.gz
+          sudo mv koyeb /usr/local/bin/koyeb
+
+      - name: Redeploy service on Koyeb
+        run: koyeb service redeploy injured-delly/stocklerts --token ${{ secrets.KOYEB_TOKEN }}
