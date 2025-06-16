@@ -75,7 +75,7 @@ def query_perplexity(prompt: str) -> str:
         'temperature': 0.2,
     }
     try:
-        resp = requests.post(url, headers=headers, json=payload, timeout=30)
+        resp = requests.post(url, headers=headers, json=payload, timeout=600)
         resp.raise_for_status()
         data = resp.json()
         return data['choices'][0]['message']['content'].strip()
