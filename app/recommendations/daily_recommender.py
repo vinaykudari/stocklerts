@@ -52,7 +52,7 @@ def parse_recommendations(text: str) -> List[Dict[str, str]]:
         m = re.match(r'^([A-Z]{1,5})\s*-\s*(.+)$', line.strip())
         if m:
             symbol, reason = m.groups()
-            recs.append({'symbol': symbol, 'reason': reason[:60].strip()})
+            recs.append({'symbol': symbol, 'reason': reason.strip()})
         if len(recs) == 5:
             break
     return recs
