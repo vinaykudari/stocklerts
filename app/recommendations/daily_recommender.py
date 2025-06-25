@@ -1,4 +1,7 @@
 import logging
+import csv
+import subprocess
+from datetime import datetime
 from typing import List, Dict
 
 import re
@@ -11,11 +14,14 @@ from app.alerts.notifier import send_notification
 from app.utils.helper import load_config
 
 PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'daily_prompt.txt'
+PERF_LOG_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'daily_performance.csv'
 
 config = load_config('config.yaml')
 USER_IDS = {account['user_id'] for account in config['alertzy']['accounts']}
 
 daily_recommendations: List[Dict[str, float]] = []
+# commit hash of the prompt file used when generating today's recommendations
+prompt_commit_id: str | None = None
 
 
 def _load_prompt() -> str:
@@ -28,6 +34,64 @@ def _load_prompt() -> str:
 
 
 PROMPT = _load_prompt()
+
+
+def _get_prompt_commit_id() -> str:
+    """Return the latest git commit hash for the prompt file."""
+    try:
+        commit = subprocess.check_output(
+            ['git', 'log', '-1', '--pretty=format:%H', str(PROMPT_PATH)]
+        )
+        return commit.decode().strip()
+    except Exception as e:
+        logging.error(f"Failed to get prompt commit id: {e}")
+        return ""
+
+
+def _log_daily_performance(recs: List[Dict[str, float]]) -> None:
+    """Append daily performance data to the CSV log and commit the change."""
+    date_str = datetime.utcnow().strftime('%Y-%m-%d')
+    commit_id = prompt_commit_id or _get_prompt_commit_id()
+
+    row: List[str] = [date_str, commit_id]
+    pct_values = []
+    for rec in recs:
+        symbol = rec.get('symbol', '')
+        pct = rec.get('pct')
+        row.extend([symbol, f"{pct:+.2f}" if isinstance(pct, float) else ""])
+        if isinstance(pct, float):
+            pct_values.append(pct)
+
+    for _ in range(5 - len(recs)):
+        row.extend(["", ""])
+
+    avg_pct = sum(pct_values) / len(pct_values) if pct_values else None
+    row.append(f"{avg_pct:+.2f}" if isinstance(avg_pct, float) else "")
+
+    file_exists = PERF_LOG_PATH.exists()
+    try:
+        with open(PERF_LOG_PATH, 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            if not file_exists:
+                header = ['date', 'commit_id']
+                for i in range(1, 6):
+                    header.extend([f'ticker{i}', f'growth{i}'])
+                header.append('average_growth')
+                writer.writerow(header)
+            writer.writerow(row)
+    except Exception as e:
+        logging.error(f"Failed to write performance log: {e}")
+        return
+
+    try:
+        subprocess.run(['git', 'add', str(PERF_LOG_PATH)], check=True)
+        subprocess.run(
+            ['git', 'commit', '-m', f'Add daily performance {date_str}'],
+            check=True,
+        )
+        subprocess.run(['git', 'push'], check=True)
+    except Exception as e:
+        logging.error(f"Failed to commit performance log: {e}")
 
 
 def _clean_output(text: str) -> str:
@@ -86,7 +150,9 @@ def query_perplexity(prompt: str) -> str:
 
 def get_daily_recommendations(finnhub_client: finnhub.Client) -> None:
     logging.warning('Fetching daily stock recommendations from Perplexity')
+    global prompt_commit_id
     prompt = PROMPT
+    prompt_commit_id = _get_prompt_commit_id()
     text = query_perplexity(prompt)
     recs = parse_recommendations(text)
 
@@ -118,9 +184,16 @@ def send_daily_performance(finnhub_client: finnhub.Client) -> None:
             open_price = rec.get('open_price')
             if open_price:
                 pct = (close_price - open_price) / open_price * 100
+                rec['pct'] = pct
+                rec['close_price'] = close_price
                 lines.append(f"{rec['symbol']}: {pct:+.2f}%")
         except Exception as e:
             logging.error(f"Failed to fetch close price for {rec['symbol']}: {e}")
     if lines:
         message = "Performance of today's picks:\n" + "\n".join(lines)
         send_notification(message, USER_IDS)
+        try:
+            _log_daily_performance(daily_recommendations)
+        except Exception as e:
+            logging.error(f"Failed to log daily performance: {e}")
+
