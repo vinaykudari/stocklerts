@@ -12,6 +12,7 @@ from app.price_tracking.tracker import check_stock_price_change
 from app.recommendations.daily_recommender import (
     get_daily_recommendations,
     send_daily_performance,
+    get_best_daily_performers,
 )
 
 
@@ -49,7 +50,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
 
     scheduler.add_job(
         func=get_daily_recommendations,
-        trigger=CronTrigger(hour=9, minute=30, timezone='US/Eastern'),
+        trigger=CronTrigger(hour=9, minute=30, timezone='US/Eastern', day_of_week='mon-fri'),
         args=[finnhub_client],
         id='daily_recommendations',
         max_instances=1,
@@ -58,9 +59,18 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
 
     scheduler.add_job(
         func=send_daily_performance,
-        trigger=CronTrigger(hour=16, minute=0, timezone='US/Eastern'),
+        trigger=CronTrigger(hour=16, minute=0, timezone='US/Eastern', day_of_week='mon-fri'),
         args=[finnhub_client],
         id='daily_performance',
+        max_instances=1,
+        replace_existing=True,
+    )
+
+    scheduler.add_job(
+        func=get_best_daily_performers,
+        trigger=CronTrigger(hour=16, minute=5, timezone='US/Eastern', day_of_week='mon-fri'),
+        args=[finnhub_client],
+        id='best_daily_performers',
         max_instances=1,
         replace_existing=True,
     )

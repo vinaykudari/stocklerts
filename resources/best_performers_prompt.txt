@@ -1,0 +1,3 @@
+List the top 5 US stock performers for today with a short reason and the percentage gain.
+Output format:
+TICKER - reason - XX.X%
