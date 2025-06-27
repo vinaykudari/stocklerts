@@ -347,12 +347,27 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
     global best_prompt_commit_id
     best_prompt_commit_id = _get_best_prompt_commit_id()
     text = query_perplexity(BEST_PROMPT)
-    recs = parse_best_performers(text)
+    recs = parse_recommendations(text)
 
-    print(f"Recs: {recs}")
+    for rec in recs:
+        try:
+            quote = finnhub_client.quote(rec['symbol'])
+            open_price = quote.get('o')
+            close_price = quote.get('c')
+            if open_price:
+                pct = (close_price - open_price) / open_price * 100
+                rec['pct'] = pct
+        except Exception as e:
+            logging.error(f"Failed to fetch performance for {rec['symbol']}: {e}")
 
     if recs:
-        lines = [f"{r['symbol']}: {r['pct']:+.2f}% - {r['reason']}" for r in recs]
+        lines = []
+        for r in recs:
+            pct = r.get('pct')
+            if isinstance(pct, float):
+                lines.append(f"{r['symbol']}: {pct:+.2f}% - {r['reason']}")
+            else:
+                lines.append(f"{r['symbol']}: {r['reason']}")
         message = "Today's best performers:\n" + "\n".join(lines)
         send_notification(message, USER_IDS)
         _log_best_performers(recs)
