@@ -11,11 +11,3 @@ def test_parse_recommendations_handles_think_block():
     ]
 
 
-def test_parse_best_performers_simple():
-    text = """AAPL - great earnings - 5.2%\nMSFT 4.1% - strong sales"""
-    recs = dr.parse_best_performers(text)
-    assert recs == [
-        {'symbol': 'AAPL', 'reason': 'great earnings', 'pct': 5.2},
-        {'symbol': 'MSFT', 'reason': 'strong sales', 'pct': 4.1},
-    ]
-

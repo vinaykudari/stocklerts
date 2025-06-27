@@ -1,11 +1,11 @@
 import logging
-import csv
 import subprocess
 from datetime import datetime
 from typing import List, Dict, Optional
 
 import re
 import os
+import json
 import finnhub
 import requests
 from pathlib import Path
@@ -24,8 +24,6 @@ def _in_git_repo(path: Path) -> bool:
 
 PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'daily_prompt.txt'
 BEST_PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'best_performers_prompt.txt'
-PERF_LOG_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'daily_performance.csv'
-BEST_PERF_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'best_daily_performers.csv'
 
 config = load_config('config.yaml')
 USER_IDS = {account['user_id'] for account in config['alertzy']['accounts']}
@@ -105,8 +103,30 @@ def _is_weekday() -> bool:
     return datetime.now(MARKET_TIMEZONE).weekday() < 5
 
 
+def _append_to_sheet(sheet_id: str | None, row: List[str], header: List[str] | None = None) -> None:
+    """Append a row to the given Google Sheet if credentials are configured."""
+    if not sheet_id:
+        logging.info('Sheet logging disabled; no sheet id provided')
+        return
+    creds_json = os.getenv('GOOGLE_SERVICE_ACCOUNT')
+    if not creds_json:
+        logging.info('Sheet logging disabled; GOOGLE_SERVICE_ACCOUNT not set')
+        return
+    try:
+        import gspread  # Imported lazily so tests pass without the dependency
+
+        creds = json.loads(creds_json)
+        client = gspread.service_account_from_dict(creds)
+        worksheet = client.open_by_key(sheet_id).sheet1
+        if header is not None and not worksheet.get_all_values():
+            worksheet.append_row(header, value_input_option='USER_ENTERED')
+        worksheet.append_row(row, value_input_option='USER_ENTERED')
+    except Exception as e:
+        logging.error(f'Failed to append to sheet {sheet_id}: {e}')
+
+
 def _log_daily_performance(recs: List[Dict[str, float]], market_pct: Optional[float]) -> None:
-    """Append daily performance data to the CSV log and commit the change."""
+    """Append daily performance data to Google Sheets."""
     date_str = datetime.utcnow().strftime('%Y-%m-%d')
     commit_id = prompt_commit_id or _get_prompt_commit_id()
 
@@ -127,38 +147,21 @@ def _log_daily_performance(recs: List[Dict[str, float]], market_pct: Optional[fl
     row.append(f"{avg_pct:+.2f}" if isinstance(avg_pct, float) else "")
     row.append(f"{market_pct:+.2f}" if isinstance(market_pct, float) else "")
 
-    file_exists = PERF_LOG_PATH.exists()
-    try:
-        with open(PERF_LOG_PATH, 'a', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            if not file_exists:
-                header = ['date', 'commit_id',
-                          'ticker1', 'growth1', 'reason1',
-                          'ticker2', 'growth2', 'reason2',
-                          'ticker3', 'growth3',
-                          'ticker4', 'growth4',
-                          'ticker5', 'growth5',
-                          'average_growth', 'market_growth']
-                writer.writerow(header)
-            writer.writerow(row)
-    except Exception as e:
-        logging.error(f"Failed to write performance log: {e}")
-        return
-
-    if _in_git_repo(PERF_LOG_PATH):
-        try:
-            subprocess.run(['git', 'add', str(PERF_LOG_PATH)], check=True)
-            subprocess.run(
-                ['git', 'commit', '-m', f'Add daily performance {date_str}'],
-                check=True,
-            )
-            subprocess.run(['git', 'push'], check=True)
-        except Exception as e:
-            logging.error(f"Failed to commit performance log: {e}")
+    sheet_id = os.getenv('DAILY_PERF_SHEET_ID')
+    header = [
+        'date', 'commit_id',
+        'ticker1', 'growth1', 'reason1',
+        'ticker2', 'growth2', 'reason2',
+        'ticker3', 'growth3',
+        'ticker4', 'growth4',
+        'ticker5', 'growth5',
+        'average_growth', 'market_growth',
+    ]
+    _append_to_sheet(sheet_id, row, header)
 
 
 def _log_best_performers(recs: List[Dict[str, float]]) -> None:
-    """Append end-of-day best performers data to CSV and commit."""
+    """Append end-of-day best performers data to Google Sheets."""
     date_str = datetime.utcnow().strftime('%Y-%m-%d')
     commit_id = best_prompt_commit_id or _get_best_prompt_commit_id()
 
@@ -174,35 +177,16 @@ def _log_best_performers(recs: List[Dict[str, float]]) -> None:
             reason,
         ])
 
-    file_exists = BEST_PERF_PATH.exists()
-    try:
-        with open(BEST_PERF_PATH, 'a', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            if not file_exists:
-                header = [
-                    'date', 'commit_id',
-                    'ticker1', 'growth1', 'reason1',
-                    'ticker2', 'growth2', 'reason2',
-                    'ticker3', 'growth3', 'reason3',
-                    'ticker4', 'growth4', 'reason4',
-                    'ticker5', 'growth5', 'reason5',
-                ]
-                writer.writerow(header)
-            writer.writerow(row)
-    except Exception as e:
-        logging.error(f"Failed to write best performers log: {e}")
-        return
-
-    if _in_git_repo(BEST_PERF_PATH):
-        try:
-            subprocess.run(['git', 'add', str(BEST_PERF_PATH)], check=True)
-            subprocess.run(
-                ['git', 'commit', '-m', f'Add best performers {date_str}'],
-                check=True,
-            )
-            subprocess.run(['git', 'push'], check=True)
-        except Exception as e:
-            logging.error(f"Failed to commit best performers log: {e}")
+    sheet_id = os.getenv('BEST_PERF_SHEET_ID')
+    header = [
+        'date', 'commit_id',
+        'ticker1', 'growth1', 'reason1',
+        'ticker2', 'growth2', 'reason2',
+        'ticker3', 'growth3', 'reason3',
+        'ticker4', 'growth4', 'reason4',
+        'ticker5', 'growth5', 'reason5',
+    ]
+    _append_to_sheet(sheet_id, row, header)
 
 
 def _clean_output(text: str) -> str:
@@ -232,28 +216,6 @@ def parse_recommendations(text: str) -> List[Dict[str, str]]:
             break
     return recs
 
-
-def parse_best_performers(text: str) -> List[Dict[str, str]]:
-    text = _clean_output(text)
-    recs = []
-    for line in text.splitlines():
-        line = line.strip()
-        m = re.match(r'^([A-Z]{1,5})\s*-\s*(.+?)\s*-\s*([+-]?\d+(?:\.\d+)?)%$', line)
-        if m:
-            symbol, reason, pct = m.groups()
-        else:
-            m = re.match(r'^([A-Z]{1,5})\s+([+-]?\d+(?:\.\d+)?)%\s*-\s*(.+)$', line)
-            if not m:
-                continue
-            symbol, pct, reason = m.groups()
-        try:
-            pct_val = float(pct)
-        except Exception:
-            continue
-        recs.append({'symbol': symbol, 'reason': reason.strip(), 'pct': pct_val})
-        if len(recs) == 5:
-            break
-    return recs
 
 
 def query_perplexity(prompt: str) -> str:
@@ -350,15 +312,16 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
     recs = parse_recommendations(text)
 
     for rec in recs:
-        try:
-            quote = finnhub_client.quote(rec['symbol'])
-            open_price = quote.get('o')
-            close_price = quote.get('c')
-            if open_price:
-                pct = (close_price - open_price) / open_price * 100
-                rec['pct'] = pct
-        except Exception as e:
-            logging.error(f"Failed to fetch performance for {rec['symbol']}: {e}")
+        if 'pct' not in rec:
+            try:
+                quote = finnhub_client.quote(rec['symbol'])
+                open_price = quote.get('o')
+                close_price = quote.get('c')
+                if open_price:
+                    pct = (close_price - open_price) / open_price * 100
+                    rec['pct'] = pct
+            except Exception as e:
+                logging.error(f"Failed to fetch performance for {rec['symbol']}: {e}")
 
     if recs:
         lines = []

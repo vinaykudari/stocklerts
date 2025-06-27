@@ -44,9 +44,13 @@ A Python-based stock alerting service that monitors prices (One symbol/sec) usin
 <br><br>
 ![img.png](resources/img.png)
       
-  ```dotenv
-      export ENCRYPT_KEY="<encrypt-key>"
-  ```
+   ```dotenv
+       export ENCRYPT_KEY="<encrypt-key>"
+       # Optional: configure these to log results to Google Sheets
+       export GOOGLE_SERVICE_ACCOUNT='{...}'
+       export DAILY_PERF_SHEET_ID="<google-sheet-id>"
+       export BEST_PERF_SHEET_ID="<google-sheet-id>"
+   ```
    
 4. **Configure Application**
 
