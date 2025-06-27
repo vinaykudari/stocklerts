@@ -349,6 +349,8 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
     text = query_perplexity(BEST_PROMPT)
     recs = parse_best_performers(text)
 
+    print(f"Recs: {recs}")
+
     if recs:
         lines = [f"{r['symbol']}: {r['pct']:+.2f}% - {r['reason']}" for r in recs]
         message = "Today's best performers:\n" + "\n".join(lines)
