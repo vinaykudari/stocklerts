@@ -25,3 +25,17 @@ def test_recommendations_endpoint(mocker):
         mock_func.assert_called_once_with(dummy_client)
     finally:
         server.shutdown()
+
+
+def test_best_performers_endpoint(mocker):
+    mock_func = mocker.patch('app.health_server.get_best_daily_performers')
+    dummy_client = object()
+    server = start_health_server(port=0, finnhub_client=dummy_client)
+    port = server.server_address[1]
+    try:
+        resp = requests.post(f'http://127.0.0.1:{port}/best_performers')
+        assert resp.status_code == 200
+        assert resp.json() == {"status": "OK"}
+        mock_func.assert_called_once_with(dummy_client)
+    finally:
+        server.shutdown()

@@ -13,6 +13,15 @@ from pathlib import Path
 from app.alerts.notifier import send_notification
 from app.utils.helper import load_config, MARKET_TIMEZONE
 
+
+def _in_git_repo(path: Path) -> bool:
+    """Return True if the given path is inside a git repository."""
+    cur = path.resolve()
+    for parent in [cur] + list(cur.parents):
+        if (parent / '.git').exists():
+            return True
+    return False
+
 PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'daily_prompt.txt'
 BEST_PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'best_performers_prompt.txt'
 PERF_LOG_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'daily_performance.csv'
@@ -53,6 +62,8 @@ BEST_PROMPT = _load_best_prompt()
 
 def _get_prompt_commit_id() -> str:
     """Return the latest git commit hash for the prompt file."""
+    if not _in_git_repo(PROMPT_PATH):
+        return ""
     try:
         commit = subprocess.check_output(
             ['git', 'log', '-1', '--pretty=format:%H', str(PROMPT_PATH)]
@@ -65,6 +76,8 @@ def _get_prompt_commit_id() -> str:
 
 def _get_best_prompt_commit_id() -> str:
     """Return commit hash for the best performers prompt file."""
+    if not _in_git_repo(BEST_PROMPT_PATH):
+        return ""
     try:
         commit = subprocess.check_output(
             ['git', 'log', '-1', '--pretty=format:%H', str(BEST_PROMPT_PATH)]
@@ -132,15 +145,16 @@ def _log_daily_performance(recs: List[Dict[str, float]], market_pct: Optional[fl
         logging.error(f"Failed to write performance log: {e}")
         return
 
-    try:
-        subprocess.run(['git', 'add', str(PERF_LOG_PATH)], check=True)
-        subprocess.run(
-            ['git', 'commit', '-m', f'Add daily performance {date_str}'],
-            check=True,
-        )
-        subprocess.run(['git', 'push'], check=True)
-    except Exception as e:
-        logging.error(f"Failed to commit performance log: {e}")
+    if _in_git_repo(PERF_LOG_PATH):
+        try:
+            subprocess.run(['git', 'add', str(PERF_LOG_PATH)], check=True)
+            subprocess.run(
+                ['git', 'commit', '-m', f'Add daily performance {date_str}'],
+                check=True,
+            )
+            subprocess.run(['git', 'push'], check=True)
+        except Exception as e:
+            logging.error(f"Failed to commit performance log: {e}")
 
 
 def _log_best_performers(recs: List[Dict[str, float]]) -> None:
@@ -179,15 +193,16 @@ def _log_best_performers(recs: List[Dict[str, float]]) -> None:
         logging.error(f"Failed to write best performers log: {e}")
         return
 
-    try:
-        subprocess.run(['git', 'add', str(BEST_PERF_PATH)], check=True)
-        subprocess.run(
-            ['git', 'commit', '-m', f'Add best performers {date_str}'],
-            check=True,
-        )
-        subprocess.run(['git', 'push'], check=True)
-    except Exception as e:
-        logging.error(f"Failed to commit best performers log: {e}")
+    if _in_git_repo(BEST_PERF_PATH):
+        try:
+            subprocess.run(['git', 'add', str(BEST_PERF_PATH)], check=True)
+            subprocess.run(
+                ['git', 'commit', '-m', f'Add best performers {date_str}'],
+                check=True,
+            )
+            subprocess.run(['git', 'push'], check=True)
+        except Exception as e:
+            logging.error(f"Failed to commit best performers log: {e}")
 
 
 def _clean_output(text: str) -> str:
