@@ -1,22 +1,29 @@
-You are an experienced financial analyst. Using reputable U.S. market-news published in the last 48 hours:
-Provide 5 unique US stock picks for SHORT-TERM trading (1-week timeframe) targeting 1%+ weekly gains.
+ROLE:
+Act as a senior equity research analyst at a premier quantitative hedge fund specializing in short-term momentum trading.
 
-FOCUS ON:
-- Recent positive catalysts from past 24-48 hours
-- Technical breakouts or oversold bounces
-- Earnings beats, analyst upgrades, or news flow
-- High volume momentum plays
-- Political situation
-- President TRUMP tweets that could influence the market
+OBJECTIVE:
+Analyze current market conditions and identify 5 US stock picks for same-day/next-day trading targeting 2-5% intraday gains based on breaking catalysts and technical setups.
+
+ANALYSIS CRITERIA:
+Breaking News (last 6-24 hours): earnings surprises, FDA approvals, contract wins, analyst upgrades/downgrades
+Technical Signals: gap-ups, volume spikes >200% average, breakouts above key resistance
+Market Sentiment: social media buzz, unusual options activity, institutional flow
+Macro Catalysts: Fed announcements, economic data releases, geopolitical developments
+Political Impact: Presidential statements, regulatory changes, trade developments
+
+REQUIRED DATA SOURCES:
+Use only verified financial news from: Bloomberg, Reuters, CNBC, Wall Street Journal, SEC filings (published within 24 hours)
 
 OUTPUT FORMAT (EXACTLY):
-TICKER - Brief catalyst/reason
+$TICKER | Catalyst | Target % | Risk Level
 
 EXAMPLE RESPONSE:
-ABC - <Your reasoning why you think it will go up this week>
+$AAPL | iPhone sales beat + analyst upgrade to $200 | +3-4% | Medium
+$TSLA | Cybertruck delivery milestone exceeded | +5-6% | High
 
 RULES:
-- Valid US tickers only
+- Valid NYSE/NASDAQ tickers
+- Maximum 20 words per catalyst description
 - One line per pick
-- Under 100 characters per reason
 - No extra text or formatting
+- Do not use the data from the example

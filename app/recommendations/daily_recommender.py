@@ -22,6 +22,7 @@ def _in_git_repo(path: Path) -> bool:
             return True
     return False
 
+
 PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'daily_prompt.txt'
 BEST_PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'best_performers_prompt.txt'
 
@@ -151,31 +152,40 @@ def _log_daily_performance(recs: List[Dict[str, float]], market_pct: Optional[fl
     commit_id = prompt_commit_id or _get_prompt_commit_id()
 
     row: List[str] = [date_str, commit_id]
-    pct_values: List[float] = []
+    actual_growth_values: List[float] = []
+
+    # Include catalyst and predicted_growth for all 5 tickers
     for idx in range(5):
         rec = recs[idx] if idx < len(recs) else {}
         symbol = rec.get('symbol', '')
-        pct = rec.get('pct')
-        reason = rec.get('reason', '')
-        row.extend([symbol, f"{pct:+.2f}" if isinstance(pct, float) else ""])
-        if idx < 2:
-            row.append(reason)
-        if isinstance(pct, float):
-            pct_values.append(pct)
+        actual_growth = rec.get('pct')  # This will be renamed in display
+        catalyst = rec.get('catalyst', '')
+        predicted_growth = rec.get('target', '')  # This comes from 'target' field
 
-    avg_pct = sum(pct_values) / len(pct_values) if pct_values else None
-    row.append(f"{avg_pct:+.2f}" if isinstance(avg_pct, float) else "")
+        row.extend([
+            symbol,
+            f"{actual_growth:+.2f}" if isinstance(actual_growth, float) else "",
+            catalyst,
+            predicted_growth
+        ])
+
+        if isinstance(actual_growth, float):
+            actual_growth_values.append(actual_growth)
+
+    avg_actual_growth = sum(actual_growth_values) / len(actual_growth_values) if actual_growth_values else None
+    row.append(f"{avg_actual_growth:+.2f}" if isinstance(avg_actual_growth, float) else "")
     row.append(f"{market_pct:+.2f}" if isinstance(market_pct, float) else "")
 
     sheet_id = os.getenv('DAILY_PERF_SHEET_ID')
+    # Updated header with new field names for all 5 tickers
     header = [
         'date', 'commit_id',
-        'ticker1', 'growth1', 'reason1',
-        'ticker2', 'growth2', 'reason2',
-        'ticker3', 'growth3',
-        'ticker4', 'growth4',
-        'ticker5', 'growth5',
-        'average_growth', 'market_growth',
+        'ticker1', 'actual_growth1', 'catalyst1', 'predicted_growth1',
+        'ticker2', 'actual_growth2', 'catalyst2', 'predicted_growth2',
+        'ticker3', 'actual_growth3', 'catalyst3', 'predicted_growth3',
+        'ticker4', 'actual_growth4', 'catalyst4', 'predicted_growth4',
+        'ticker5', 'actual_growth5', 'catalyst5', 'predicted_growth5',
+        'average_actual_growth', 'market_growth'
     ]
     _append_to_sheet(sheet_id, row, header)
 
@@ -233,14 +243,18 @@ def parse_recommendations(text: str) -> List[Dict[str, str]]:
     text = _clean_output(text)
     recs = []
     for line in text.splitlines():
-        m = re.match(r'^([A-Z]{1,5})\s*-\s*(.+)$', line.strip())
+        m = re.match(r'^\$?([A-Z]{1,5}) \| (.+?) \| \+?([0-9]+(?:-[0-9]+)?%) \| (Low|Medium|High)$', line.strip())
         if m:
-            symbol, reason = m.groups()
-            recs.append({'symbol': symbol, 'reason': reason.strip()})
+            symbol, catalyst, target, risk = m.groups()
+            recs.append({
+                'symbol': symbol,
+                'catalyst': catalyst.strip(),
+                'target': target,
+                'risk': risk
+            })
         if len(recs) == 5:
             break
     return recs
-
 
 
 def query_perplexity(prompt: str) -> str:
@@ -291,7 +305,7 @@ def get_daily_recommendations(finnhub_client: finnhub.Client) -> None:
         daily_recommendations.append(rec)
 
     if daily_recommendations:
-        lines = [f"{r['symbol']}: {r['reason']}" for r in daily_recommendations]
+        lines = [f"{r['symbol']} | {r['catalyst']} | {r['target']} | {r['risk']}" for r in daily_recommendations]
         message = "Today's picks:\n" + "\n".join(lines)
         send_notification(message, USER_IDS)
 
@@ -305,11 +319,13 @@ def send_daily_performance(finnhub_client: finnhub.Client) -> None:
             quote = finnhub_client.quote(rec['symbol'])
             close_price = quote.get('c')
             open_price = rec.get('open_price')
-            if open_price:
+            if open_price and close_price is not None:
                 pct = (close_price - open_price) / open_price * 100
                 rec['pct'] = pct
                 rec['close_price'] = close_price
-                lines.append(f"{rec['symbol']}[{pct:+.2f}%]")
+                target = rec.get('target', '')
+                risk = rec.get('risk', '')
+                lines.append(f"{rec['symbol']}[{pct:+.2f}%] | Target: {target} | Risk: {risk}")
         except Exception as e:
             logging.error(f"Failed to fetch close price for {rec['symbol']}: {e}")
     if lines:
@@ -354,4 +370,3 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
         message = "Today's best performers:\n" + "\n".join(lines)
         send_notification(message, USER_IDS)
         _log_best_performers(recs)
-
