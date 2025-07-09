@@ -134,10 +134,6 @@ def _append_to_sheet(sheet_id: str | None, row: List[str], header: List[str] | N
         logging.debug('Opened worksheet')
 
         if header is not None and not worksheet.row_values(1):
-            logging.debug('Header exists and sheet is empty')
-            worksheet.resize(rows=0)
-            logging.debug('Resized sheet to 0 rows')
-
             worksheet.append_row(header, value_input_option='USER_ENTERED')
             logging.debug('Appending header row: %s', header)
 
