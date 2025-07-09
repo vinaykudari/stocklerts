@@ -229,7 +229,6 @@ def _clean_output(text: str) -> str:
     text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
     text = re.sub(r'\*(.*?)\*', r'\1', text)
     text = re.sub(r'`(.*?)`', r'\1', text)
-    text = re.sub(r'\|[^|]*\|', '', text)
     text = re.sub(r'^#+\s+.*$', '', text, flags=re.MULTILINE)
     text = re.sub(r'^-+$', '', text, flags=re.MULTILINE)
     text = re.sub(r'^\*\s+.*$', '', text, flags=re.MULTILINE)
@@ -348,6 +347,10 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
     best_prompt_commit_id = _get_best_prompt_commit_id()
     text = query_perplexity(BEST_PROMPT)
     recs = parse_recommendations(text)
+
+    for rec in recs:
+        if 'catalyst' in rec and 'reason' not in rec:
+            rec['reason'] = rec['catalyst']
 
     for rec in recs:
         if 'pct' not in rec:

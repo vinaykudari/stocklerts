@@ -45,10 +45,17 @@ def test_best_performers_endpoint_appends_sheet(monkeypatch, mocker):
     rows: list[list[str]] = []
 
     class DummyWorksheet:
-        def get_all_values(self):
-            return list(rows)
+        def __init__(self):
+            self.data = []
 
-        def append_row(self, row, value_input_option='USER_ENTERED'):
+        def get_all_values(self):
+            return list(self.data)
+
+        def row_values(self, idx):
+            return self.data[idx - 1] if len(self.data) >= idx else []
+
+        def append_row(self, row, value_input_option='USER_ENTERED', **kwargs):
+            self.data.append(row)
             rows.append(row)
 
     dummy_ws = DummyWorksheet()
@@ -67,7 +74,10 @@ def test_best_performers_endpoint_appends_sheet(monkeypatch, mocker):
     monkeypatch.setenv('GOOGLE_SERVICE_ACCOUNT', '{}')
     monkeypatch.setenv('BEST_PERF_SHEET_ID', 'sheetid')
 
-    monkeypatch.setattr('app.recommendations.daily_recommender.query_perplexity', lambda prompt: 'AAPL - good\nMSFT - nice')
+    monkeypatch.setattr(
+        'app.recommendations.daily_recommender.query_perplexity',
+        lambda prompt: '$AAPL | good | +2% | Low\n$MSFT | nice | +3% | Medium'
+    )
     monkeypatch.setattr('app.recommendations.daily_recommender._is_weekday', lambda: True)
     monkeypatch.setattr('app.recommendations.daily_recommender._get_best_prompt_commit_id', lambda: 'abc')
     monkeypatch.setattr('app.recommendations.daily_recommender.send_notification', lambda msg, ids: None)
@@ -91,10 +101,17 @@ def test_debug_best_performers_endpoint(monkeypatch):
     rows: list[list[str]] = []
 
     class DummyWorksheet:
-        def get_all_values(self):
-            return list(rows)
+        def __init__(self):
+            self.data = []
 
-        def append_row(self, row, value_input_option='USER_ENTERED'):
+        def get_all_values(self):
+            return list(self.data)
+
+        def row_values(self, idx):
+            return self.data[idx - 1] if len(self.data) >= idx else []
+
+        def append_row(self, row, value_input_option='USER_ENTERED', **kwargs):
+            self.data.append(row)
             rows.append(row)
 
     dummy_ws = DummyWorksheet()
