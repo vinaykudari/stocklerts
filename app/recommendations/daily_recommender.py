@@ -296,10 +296,9 @@ def send_daily_performance(finnhub_client: finnhub.Client) -> None:
         except Exception as e:
             logging.error(f"Failed to log daily performance: {e}")
 
-        try:
-            get_best_daily_performers(finnhub_client)
-        except Exception as e:
-            logging.error(f"Failed to fetch best performers: {e}")
+        # Triggering best performer retrieval here resulted in duplicate
+        # notifications because it is also scheduled separately.  Let the
+        # scheduler call it once a day instead.
 
 
 def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
@@ -328,7 +327,7 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
         for r in recs:
             pct = r.get('pct')
             if isinstance(pct, float):
-                lines.append(f"{r['symbol']}: {pct:+.2f}% - {r['reason']}")
+                lines.append(f"{r['symbol']}[{pct:+.2f}%]: {r['reason']}")
             else:
                 lines.append(f"{r['symbol']}: {r['reason']}")
         message = "Today's best performers:\n" + "\n".join(lines)

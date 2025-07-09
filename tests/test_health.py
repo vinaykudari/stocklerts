@@ -85,3 +85,40 @@ def test_best_performers_endpoint_appends_sheet(monkeypatch, mocker):
 
     assert rows[0][0] == 'date'
     assert len(rows) == 2
+
+
+def test_debug_best_performers_endpoint(monkeypatch):
+    rows: list[list[str]] = []
+
+    class DummyWorksheet:
+        def get_all_values(self):
+            return list(rows)
+
+        def append_row(self, row, value_input_option='USER_ENTERED'):
+            rows.append(row)
+
+    dummy_ws = DummyWorksheet()
+
+    class DummyClient:
+        def open_by_key(self, key):
+            return type('S', (), {'sheet1': dummy_ws})
+
+    def service_account_from_dict(creds):
+        return DummyClient()
+
+    import types, sys
+
+    gspread_dummy = types.SimpleNamespace(service_account_from_dict=service_account_from_dict)
+    monkeypatch.setitem(sys.modules, 'gspread', gspread_dummy)
+    monkeypatch.setenv('GOOGLE_SERVICE_ACCOUNT', '{}')
+    monkeypatch.setenv('BEST_PERF_SHEET_ID', 'sheetid')
+
+    server = start_health_server(port=0)
+    port = server.server_address[1]
+    try:
+        resp = requests.post(f'http://127.0.0.1:{port}/debug_best_performers')
+        assert resp.status_code == 200
+    finally:
+        server.shutdown()
+
+    assert len(rows) == 2
