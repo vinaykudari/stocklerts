@@ -10,7 +10,7 @@ Real-time price data for today’s session
 Fresh catalyst (earnings beat, analyst upgrade, policy headline, Trump/X post, etc.) published within 24 hours
 
 OUTPUT FORMAT (EXACTLY):
-TICKER - Brief catalyst/reason
+$TICKER | Catalyst | Target % | Risk Level
 
 RULES
 
