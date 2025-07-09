@@ -186,6 +186,11 @@ def _log_best_performers(recs: List[Dict[str, float]]) -> None:
         'ticker4', 'growth4', 'reason4',
         'ticker5', 'growth5', 'reason5',
     ]
+    logging.info(
+        'Logging best performers to sheet %s: %s',
+        sheet_id or '<disabled>',
+        row,
+    )
     _append_to_sheet(sheet_id, row, header)
 
 
