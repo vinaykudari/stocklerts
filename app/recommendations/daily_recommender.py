@@ -304,6 +304,8 @@ def get_daily_recommendations(finnhub_client: finnhub.Client) -> None:
         rec['open_price'] = open_price
         daily_recommendations.append(rec)
 
+    print(daily_recommendations)
+
     if daily_recommendations:
         lines = [f"{r['symbol']} | {r['catalyst']} | {r['target']} | {r['risk']}" for r in daily_recommendations]
         message = "Today's picks:\n" + "\n".join(lines)
