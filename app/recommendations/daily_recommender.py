@@ -104,25 +104,49 @@ def _is_weekday() -> bool:
 
 
 def _append_to_sheet(sheet_id: str | None, row: List[str], header: List[str] | None = None) -> None:
-    """Append a row to the given Google Sheet if credentials are configured."""
+    """Append a row to Google Sheet with proper header handling and debug logging."""
+    logging.debug('Function called with sheet_id=%s, row=%s', sheet_id, row)
+
     if not sheet_id:
+        logging.debug('Sheet ID not provided')
         logging.info('Sheet logging disabled; no sheet id provided')
         return
+
+    logging.debug('Sheet ID provided: %s', sheet_id)
+
     creds_json = os.getenv('GOOGLE_SERVICE_ACCOUNT')
     if not creds_json:
+        logging.debug('GOOGLE_SERVICE_ACCOUNT not found')
         logging.info('Sheet logging disabled; GOOGLE_SERVICE_ACCOUNT not set')
         return
+
+    logging.debug('Credentials loaded from environment')
+
     try:
-        import gspread  # Imported lazily so tests pass without the dependency
+        import gspread
+        logging.debug('Importing gspread library')
 
         creds = json.loads(creds_json)
         client = gspread.service_account_from_dict(creds)
+        logging.debug('Initializing Google Sheets client')
+
         worksheet = client.open_by_key(sheet_id).sheet1
-        if header is not None and not worksheet.get_all_values():
+        logging.debug('Opened worksheet')
+
+        if header is not None and not worksheet.row_values(1):
+            logging.debug('Header exists and sheet is empty')
+            worksheet.resize(rows=0)
+            logging.debug('Resized sheet to 0 rows')
+
             worksheet.append_row(header, value_input_option='USER_ENTERED')
-        worksheet.append_row(row, value_input_option='USER_ENTERED')
+            logging.debug('Appending header row: %s', header)
+
+        worksheet.append_row(row, value_input_option='USER_ENTERED', table_range='A1')
+        logging.debug('Appending data row: %s', row)
+
     except Exception as e:
         logging.error(f'Failed to append to sheet {sheet_id}: {e}')
+        logging.debug('Full exception traceback:', exc_info=True)
 
 
 def _log_daily_performance(recs: List[Dict[str, float]], market_pct: Optional[float]) -> None:
@@ -289,7 +313,7 @@ def send_daily_performance(finnhub_client: finnhub.Client) -> None:
                 pct = (close_price - open_price) / open_price * 100
                 rec['pct'] = pct
                 rec['close_price'] = close_price
-                lines.append(f"{rec['symbol']}: {pct:+.2f}%")
+                lines.append(f"{rec['symbol']}[{pct:+.2f}%]")
         except Exception as e:
             logging.error(f"Failed to fetch close price for {rec['symbol']}: {e}")
     if lines:
@@ -300,10 +324,6 @@ def send_daily_performance(finnhub_client: finnhub.Client) -> None:
             _log_daily_performance(daily_recommendations, market_pct)
         except Exception as e:
             logging.error(f"Failed to log daily performance: {e}")
-
-        # Triggering best performer retrieval here resulted in duplicate
-        # notifications because it is also scheduled separately.  Let the
-        # scheduler call it once a day instead.
 
 
 def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
