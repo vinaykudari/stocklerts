@@ -241,16 +241,24 @@ def _clean_output(text: str) -> str:
 def parse_recommendations(text: str) -> List[Dict[str, str]]:
     text = _clean_output(text)
     recs = []
+    pattern = re.compile(
+        r'^\$?([A-Z]{1,5})\s*\|\s*(.+?)\s*\|\s*([+\-]?\d+(?:\.\d+)?%?)\s*(?:\|\s*(Low|Medium|High))?$',  # noqa: E501
+        re.IGNORECASE,
+    )
     for line in text.splitlines():
-        m = re.match(r'^\$?([A-Z]{1,5}) \| (.+?) \| \+?([0-9]+(?:-[0-9]+)?%) \| (Low|Medium|High)$', line.strip())
+        m = pattern.match(line.strip())
         if m:
             symbol, catalyst, target, risk = m.groups()
-            recs.append({
-                'symbol': symbol,
-                'catalyst': catalyst.strip(),
-                'target': target,
-                'risk': risk
-            })
+            if not target.endswith('%'):
+                target += '%'
+            recs.append(
+                {
+                    'symbol': symbol,
+                    'catalyst': catalyst.strip(),
+                    'target': target,
+                    'risk': risk or '',
+                }
+            )
         if len(recs) == 5:
             break
     return recs

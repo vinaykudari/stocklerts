@@ -10,7 +10,10 @@ Real-time price data for today’s session
 Fresh catalyst (earnings beat, analyst upgrade, policy headline, Trump/X post, etc.) published within 24 hours
 
 OUTPUT FORMAT (EXACTLY):
-$TICKER | Catalyst | Target % | Risk Level
+$TICKER | Catalyst | Target %
+
+EXAMPLE RESPONSE:
+$AAPL | Trump relaxed tariffs on China | +3.46
 
 RULES
 
