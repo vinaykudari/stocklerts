@@ -303,8 +303,6 @@ def get_daily_recommendations(finnhub_client: finnhub.Client) -> None:
         rec['open_price'] = open_price
         daily_recommendations.append(rec)
 
-    print(daily_recommendations)
-
     if daily_recommendations:
         lines = [f"{r['symbol']} | {r['catalyst']} | {r['target']} | {r['risk']}" for r in daily_recommendations]
         message = "Today's picks:\n" + "\n".join(lines)
@@ -325,8 +323,7 @@ def send_daily_performance(finnhub_client: finnhub.Client) -> None:
                 rec['pct'] = pct
                 rec['close_price'] = close_price
                 target = rec.get('target', '')
-                risk = rec.get('risk', '')
-                lines.append(f"{rec['symbol']}[{pct:+.2f}%] | Target: {target} | Risk: {risk}")
+                lines.append(f"{rec['symbol']}: Actual: {pct:+.2f}%  Predicted: {target}")
         except Exception as e:
             logging.error(f"Failed to fetch close price for {rec['symbol']}: {e}")
     if lines:
