@@ -3,7 +3,7 @@ import logging
 from app.scheduler.job_scheduler import start_scheduler
 from app.database.db_manager import DBManager
 from app.utils.helper import load_config, setup_logging
-from app.health_server import start_health_server
+from app.api_server import start_health_server
 
 
 def main() -> None:

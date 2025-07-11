@@ -1,9 +1,7 @@
 import logging
-import subprocess
 from datetime import datetime
 from typing import List, Dict, Optional
 
-import re
 import os
 import json
 import finnhub
@@ -11,80 +9,32 @@ import requests
 from pathlib import Path
 
 from app.alerts.notifier import send_notification
+from app.schemas.prompt_schemas import DAILY_SCHEMA, BEST_PERFORMERS_SCHEMA
 from app.utils.helper import load_config, MARKET_TIMEZONE
 
 
-def _in_git_repo(path: Path) -> bool:
-    """Return True if the given path is inside a git repository."""
-    cur = path.resolve()
-    for parent in [cur] + list(cur.parents):
-        if (parent / '.git').exists():
-            return True
-    return False
-
-
-PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'daily_prompt.txt'
-BEST_PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'best_performers_prompt.txt'
+DAILY_RECOMMENDATIONS_PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'daily_prompt.txt'
+DAILY_BEST_PERFORMERS_PROMPT_PATH = Path(__file__).resolve().parents[2] / 'resources' / 'best_performers_prompt.txt'
 
 config = load_config('config.yaml')
 USER_IDS = {account['user_id'] for account in config['alertzy']['accounts']}
 
 daily_recommendations: List[Dict[str, float]] = []
-# commit hash of the prompt file used when generating today's recommendations
 prompt_commit_id: str | None = None
 best_prompt_commit_id: str | None = None
 
 
-def _load_prompt() -> str:
+def _load_prompt(prompt_path) -> str:
     try:
-        with open(PROMPT_PATH, 'r') as f:
+        with open(prompt_path, 'r') as f:
             return f.read()
     except Exception as e:
         logging.error(f"Failed to load prompt: {e}")
         return ""
 
 
-PROMPT = _load_prompt()
-
-
-def _load_best_prompt() -> str:
-    try:
-        with open(BEST_PROMPT_PATH, 'r') as f:
-            return f.read()
-    except Exception as e:
-        logging.error(f"Failed to load best performers prompt: {e}")
-        return ""
-
-
-BEST_PROMPT = _load_best_prompt()
-
-
-def _get_prompt_commit_id() -> str:
-    """Return the latest git commit hash for the prompt file."""
-    if not _in_git_repo(PROMPT_PATH):
-        return ""
-    try:
-        commit = subprocess.check_output(
-            ['git', 'log', '-1', '--pretty=format:%H', str(PROMPT_PATH)]
-        )
-        return commit.decode().strip()
-    except Exception as e:
-        logging.error(f"Failed to get prompt commit id: {e}")
-        return ""
-
-
-def _get_best_prompt_commit_id() -> str:
-    """Return commit hash for the best performers prompt file."""
-    if not _in_git_repo(BEST_PROMPT_PATH):
-        return ""
-    try:
-        commit = subprocess.check_output(
-            ['git', 'log', '-1', '--pretty=format:%H', str(BEST_PROMPT_PATH)]
-        )
-        return commit.decode().strip()
-    except Exception as e:
-        logging.error(f"Failed to get best prompt commit id: {e}")
-        return ""
+DAILY_RECOMMENDATIONS_PROMPT = _load_prompt(DAILY_RECOMMENDATIONS_PROMPT_PATH)
+DAILY_BEST_PERFORMERS_PROMPT = _load_prompt(DAILY_BEST_PERFORMERS_PROMPT_PATH)
 
 
 def _get_market_pct(client: finnhub.Client) -> Optional[float]:
@@ -105,7 +55,6 @@ def _is_weekday() -> bool:
 
 
 def _append_to_sheet(sheet_id: str | None, row: List[str], header: List[str] | None = None) -> None:
-    """Append a row to Google Sheet with proper header handling and debug logging."""
     logging.debug('Function called with sheet_id=%s, row=%s', sheet_id, row)
 
     if not sheet_id:
@@ -147,20 +96,17 @@ def _append_to_sheet(sheet_id: str | None, row: List[str], header: List[str] | N
 
 
 def _log_daily_performance(recs: List[Dict[str, float]], market_pct: Optional[float]) -> None:
-    """Append daily performance data to Google Sheets."""
-    date_str = datetime.utcnow().strftime('%Y-%m-%d')
-    commit_id = prompt_commit_id or _get_prompt_commit_id()
+    date_str = datetime.now().strftime('%Y-%m-%d')
 
-    row: List[str] = [date_str, commit_id]
+    row: List[str] = [date_str]
     actual_growth_values: List[float] = []
 
-    # Include catalyst and predicted_growth for all 5 tickers
     for idx in range(5):
         rec = recs[idx] if idx < len(recs) else {}
         symbol = rec.get('symbol', '')
-        actual_growth = rec.get('pct')  # This will be renamed in display
+        actual_growth = rec.get('pct')
         catalyst = rec.get('catalyst', '')
-        predicted_growth = rec.get('target', '')  # This comes from 'target' field
+        predicted_growth = rec.get('target', '')
 
         row.extend([
             symbol,
@@ -177,9 +123,8 @@ def _log_daily_performance(recs: List[Dict[str, float]], market_pct: Optional[fl
     row.append(f"{market_pct:+.2f}" if isinstance(market_pct, float) else "")
 
     sheet_id = os.getenv('DAILY_PERF_SHEET_ID')
-    # Updated header with new field names for all 5 tickers
     header = [
-        'date', 'commit_id',
+        'date',
         'ticker1', 'actual_growth1', 'catalyst1', 'predicted_growth1',
         'ticker2', 'actual_growth2', 'catalyst2', 'predicted_growth2',
         'ticker3', 'actual_growth3', 'catalyst3', 'predicted_growth3',
@@ -190,12 +135,11 @@ def _log_daily_performance(recs: List[Dict[str, float]], market_pct: Optional[fl
     _append_to_sheet(sheet_id, row, header)
 
 
-def _log_best_performers(recs: List[Dict[str, float]]) -> None:
+def log_best_performers(recs: List[Dict[str, float]]) -> None:
     """Append end-of-day best performers data to Google Sheets."""
-    date_str = datetime.utcnow().strftime('%Y-%m-%d')
-    commit_id = best_prompt_commit_id or _get_best_prompt_commit_id()
+    date_str = datetime.now().strftime('%Y-%m-%d')
 
-    row: List[str] = [date_str, commit_id]
+    row: List[str] = [date_str]
     for idx in range(5):
         rec = recs[idx] if idx < len(recs) else {}
         symbol = rec.get('symbol', '')
@@ -224,52 +168,13 @@ def _log_best_performers(recs: List[Dict[str, float]]) -> None:
     _append_to_sheet(sheet_id, row, header)
 
 
-def _clean_output(text: str) -> str:
-    text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL | re.IGNORECASE)
-    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
-    text = re.sub(r'\*(.*?)\*', r'\1', text)
-    text = re.sub(r'`(.*?)`', r'\1', text)
-    text = re.sub(r'^#+\s+.*$', '', text, flags=re.MULTILINE)
-    text = re.sub(r'^-+$', '', text, flags=re.MULTILINE)
-    text = re.sub(r'^\*\s+.*$', '', text, flags=re.MULTILINE)
-    text = re.sub(r'\[\d+\]', '', text)
-    text = re.sub(r'[ \t]+', ' ', text)
-    text = re.sub(r'\n\s+\n', '\n', text)
-    return text.strip()
-
-
-def parse_recommendations(text: str) -> List[Dict[str, str]]:
-    text = _clean_output(text)
-    recs = []
-    pattern = re.compile(
-        r'^\$?([A-Z]{1,5})\s*\|\s*(.+?)\s*\|\s*([+\-]?\d+(?:\.\d+)?%?)\s*(?:\|\s*(Low|Medium|High))?$',  # noqa: E501
-        re.IGNORECASE,
-    )
-    for line in text.splitlines():
-        m = pattern.match(line.strip())
-        if m:
-            symbol, catalyst, target, risk = m.groups()
-            if not target.endswith('%'):
-                target += '%'
-            recs.append(
-                {
-                    'symbol': symbol,
-                    'catalyst': catalyst.strip(),
-                    'target': target,
-                    'risk': risk or '',
-                }
-            )
-        if len(recs) == 5:
-            break
-    return recs
-
-
-def query_perplexity(prompt: str) -> str:
+def query_perplexity(prompt: str, schema: dict = None) -> dict:
     api_key = os.getenv('PERPLEXITY_API_KEY')
     model = os.getenv('PERPLEXITY_MODEL')
     if not api_key or not model:
         logging.error('PERPLEXITY_API_KEY or PERPLEXITY_MODEL not set')
-        return ""
+        return {}
+
     url = 'https://api.perplexity.ai/chat/completions'
     headers = {
         'Authorization': f'Bearer {api_key}',
@@ -280,27 +185,29 @@ def query_perplexity(prompt: str) -> str:
         'messages': [{'role': 'user', 'content': prompt}],
         'temperature': 0.2,
     }
+    if schema:
+        payload['response_format'] = {
+            'type': 'json_schema',
+            'json_schema': {'schema': schema}
+        }
+
     try:
         resp = requests.post(url, headers=headers, json=payload, timeout=600)
         resp.raise_for_status()
         data = resp.json()
-        return data['choices'][0]['message']['content'].strip()
+        return json.loads(data['choices'][0]['message']['content'].strip())
     except Exception as e:
         logging.error(f"Perplexity API request failed: {e}")
-        return ""
+        return {}
 
 
 def get_daily_recommendations(finnhub_client: finnhub.Client) -> None:
     if not _is_weekday():
         return
     logging.warning('Fetching daily stock recommendations from Perplexity')
-    global prompt_commit_id
-    prompt = PROMPT
-    prompt_commit_id = _get_prompt_commit_id()
-    text = query_perplexity(prompt)
-    recs = parse_recommendations(text)
+    response = query_perplexity(DAILY_RECOMMENDATIONS_PROMPT, DAILY_SCHEMA)
 
-    daily_recommendations.clear()
+    recs = response.get('recommendations', [])
     for rec in recs:
         try:
             quote = finnhub_client.quote(rec['symbol'])
@@ -348,14 +255,8 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
     if not _is_weekday():
         return
     logging.warning('Fetching top daily performers from Perplexity')
-    global best_prompt_commit_id
-    best_prompt_commit_id = _get_best_prompt_commit_id()
-    text = query_perplexity(BEST_PROMPT)
-    recs = parse_recommendations(text)
-
-    for rec in recs:
-        if 'catalyst' in rec and 'reason' not in rec:
-            rec['reason'] = rec['catalyst']
+    response = query_perplexity(DAILY_BEST_PERFORMERS_PROMPT, BEST_PERFORMERS_SCHEMA)
+    recs = response.get('performers', [])
 
     for rec in recs:
         if 'pct' not in rec:
@@ -374,9 +275,9 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
         for r in recs:
             pct = r.get('pct')
             if isinstance(pct, float):
-                lines.append(f"{r['symbol']}[{pct:+.2f}%]: {r['reason']}")
+                lines.append(f"{r['symbol']} [{pct:+.2f}%]: {r['reason']}")
             else:
                 lines.append(f"{r['symbol']}: {r['reason']}")
         message = "Today's best performers:\n" + "\n".join(lines)
         send_notification(message, USER_IDS)
-        _log_best_performers(recs)
+        log_best_performers(recs)

@@ -8,7 +8,7 @@ import finnhub
 from app.recommendations.daily_recommender import (
     get_daily_recommendations,
     get_best_daily_performers,
-    _log_best_performers,
+    log_best_performers,
 )
 
 
@@ -57,12 +57,11 @@ class HealthRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({'status': 'OK'}).encode())
         elif self.path == '/debug_best_performers':
-            # Manually log dummy data to the best performers sheet for debugging
             dummy_data = [
                 {'symbol': 'AAPL', 'pct': 5.0, 'reason': 'debug'},
                 {'symbol': 'MSFT', 'pct': 3.0, 'reason': 'debug'},
             ]
-            _log_best_performers(dummy_data)
+            log_best_performers(dummy_data)
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
@@ -70,10 +69,6 @@ class HealthRequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
             self.end_headers()
-
-    def log_message(self, format: str, *args) -> None:  # noqa: D401
-        """Silence default logging."""
-        return
 
 
 def start_health_server(port: int = 8000, finnhub_client: finnhub.Client | None = None) -> HTTPServer:

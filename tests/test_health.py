@@ -1,5 +1,5 @@
 import requests
-from app.health_server import start_health_server
+from app.api_server import start_health_server
 
 
 def test_health_endpoint(tmp_path):
