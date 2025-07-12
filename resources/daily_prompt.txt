@@ -14,16 +14,20 @@ Political Impact: Presidential statements, regulatory changes, trade development
 REQUIRED DATA SOURCES:
 Use only verified financial news from: Bloomberg, Reuters, CNBC, Wall Street Journal, SEC filings (published within 24 hours)
 
-OUTPUT FORMAT (EXACTLY):
-$TICKER | Catalyst | Target % | Risk Level
-
-EXAMPLE RESPONSE:
-$AAPL | iPhone sales beat + analyst upgrade to $200 | +3-4% | Medium
-$TSLA | Cybertruck delivery milestone exceeded | +5-6% | High
-
 RULES:
 - Valid NYSE/NASDAQ tickers
-- Maximum 20 words per catalyst description
+- Maximum 25 words per catalyst description
 - One line per pick
 - No extra text or formatting
 - Do not use the data from the example
+
+
+OUTPUT FORMAT: [
+  {
+    "symbol": <TICKER>,
+    "catalyst": <Reason why you think this stock will go up today Eg. Trump tweeted that its a good time to buy stocks>,
+    "target": <Target growth in percentage Eg. 2%>
+    "risk": <Risk level associated with the stock Eg. Low, Medium, High>
+  },
+  ...
+]

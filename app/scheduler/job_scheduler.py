@@ -13,6 +13,7 @@ from app.recommendations.daily_recommender import (
     get_daily_recommendations,
     send_daily_performance,
     get_best_daily_performers,
+    upload_prompt_to_sheets,
 )
 
 
@@ -71,6 +72,14 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
         trigger=CronTrigger(hour=16, minute=5, timezone='US/Eastern', day_of_week='mon-fri'),
         args=[finnhub_client],
         id='best_daily_performers',
+        max_instances=1,
+        replace_existing=True,
+    )
+
+    scheduler.add_job(
+        func=upload_prompt_to_sheets,
+        trigger=CronTrigger(hour=8, minute=0, timezone='US/Eastern'),
+        id='upload_prompt_tracking',
         max_instances=1,
         replace_existing=True,
     )

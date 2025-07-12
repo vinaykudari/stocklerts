@@ -11,7 +11,7 @@ DAILY_SCHEMA = {
                     "target": {"type": "string"},
                     "risk": {"type": "string"}
                 },
-                "required": ["symbol", "catalyst", "target"]
+                "required": ["symbol", "catalyst", "target", "risk"]
             },
             "minItems": 5,
             "maxItems": 5

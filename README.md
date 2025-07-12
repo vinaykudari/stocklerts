@@ -50,6 +50,7 @@ A Python-based stock alerting service that monitors prices (One symbol/sec) usin
        export GOOGLE_SERVICE_ACCOUNT='{...}'
        export DAILY_PERF_SHEET_ID="<google-sheet-id>"
        export BEST_PERF_SHEET_ID="<google-sheet-id>"
+       export PROMPT_TRACKING_SHEET_ID="<google-sheet-id>"
    ```
    
 4. **Configure Application**

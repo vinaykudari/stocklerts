@@ -16,6 +16,7 @@ dependencies = [
     "cryptography>=43.0.1",
     "pytz>=2024.1",
     "gspread>=6.0.2",
+    "watchdog>=6.0.0",
 ]
 
 [project.optional-dependencies]

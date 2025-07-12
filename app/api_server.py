@@ -9,6 +9,7 @@ from app.recommendations.daily_recommender import (
     get_daily_recommendations,
     get_best_daily_performers,
     log_best_performers,
+    upload_prompt_to_sheets,
 )
 
 
@@ -35,11 +36,11 @@ class HealthRequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
 
-            get_daily_recommendations(client)
+            res = get_daily_recommendations(client)
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({'status': 'OK'}).encode())
+            self.wfile.write(json.dumps(res).encode())
         elif self.path == '/best_performers':
             client = getattr(self.server, 'finnhub_client', None)
             if client is None:
@@ -51,11 +52,11 @@ class HealthRequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
 
-            get_best_daily_performers(client)
+            res = get_best_daily_performers(client)
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({'status': 'OK'}).encode())
+            self.wfile.write(json.dumps(res).encode())
         elif self.path == '/debug_best_performers':
             dummy_data = [
                 {'symbol': 'AAPL', 'pct': 5.0, 'reason': 'debug'},
@@ -66,6 +67,18 @@ class HealthRequestHandler(BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'status': 'OK'}).encode())
+        elif self.path == '/upload_prompt':
+            try:
+                upload_prompt_to_sheets()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status': 'OK', 'message': 'Prompt uploaded successfully'}).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status': 'ERROR', 'message': str(e)}).encode())
         else:
             self.send_response(404)
             self.end_headers()

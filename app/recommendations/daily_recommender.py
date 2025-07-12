@@ -1,13 +1,16 @@
+# Standard library imports
+import json
 import logging
+import os
 from datetime import datetime
+from pathlib import Path
 from typing import List, Dict, Optional
 
-import os
-import json
+# Third-party imports
 import finnhub
 import requests
-from pathlib import Path
 
+# Local application imports
 from app.alerts.notifier import send_notification
 from app.schemas.prompt_schemas import DAILY_SCHEMA, BEST_PERFORMERS_SCHEMA
 from app.utils.helper import load_config, MARKET_TIMEZONE
@@ -53,6 +56,84 @@ def _get_market_pct(client: finnhub.Client) -> Optional[float]:
 def _is_weekday() -> bool:
     return datetime.now(MARKET_TIMEZONE).weekday() < 5
 
+
+def _get_last_prompt_from_sheets(sheet_id: str) -> str:
+    """Get the last uploaded prompt content from Google Sheets."""
+    logging.debug('Getting last prompt from Google Sheets')
+
+    creds_json = os.getenv('GOOGLE_SERVICE_ACCOUNT')
+    if not creds_json:
+        logging.debug('GOOGLE_SERVICE_ACCOUNT not found')
+        raise 
+
+    try:
+        import gspread
+        logging.debug('Importing gspread library')
+
+        creds = json.loads(creds_json)
+        client = gspread.service_account_from_dict(creds)
+        logging.debug('Initializing Google Sheets client')
+
+        worksheet = client.open_by_key(sheet_id).sheet1
+        logging.debug('Opened worksheet')
+
+        records = worksheet.get_all_records()
+
+        if not records:
+            logging.debug('No records found in sheet')
+            return ""
+
+        last_record = records[-1]
+        last_prompt = last_record.get('Prompt', '')
+
+        logging.debug(f'Retrieved last prompt from sheet (length: {len(last_prompt)})')
+        return last_prompt
+
+    except Exception as e:
+        logging.error(f'Failed to get last prompt from sheet {sheet_id}: {e}')
+        logging.debug('Full exception traceback:', exc_info=True)
+        raise e
+
+def upload_prompt_to_sheets() -> None:
+    print("Uploading prompt to Google Sheets...")
+    """Upload daily_prompt.txt to Google Sheets if it has been updated."""
+    logging.info('Checking if daily prompt needs to be uploaded to sheets')
+
+    prompt_path = DAILY_RECOMMENDATIONS_PROMPT_PATH
+
+    if not os.path.exists(prompt_path):
+        logging.error(f'Prompt file not found: {prompt_path}')
+        return
+
+    try:
+        with open(prompt_path, 'r', encoding='utf-8') as f:
+            current_content = f.read().strip()
+    except Exception as e:
+        logging.error(f'Failed to read prompt file: {e}')
+        return
+
+    sheet_id = os.getenv('PROMPT_TRACKING_SHEET_ID')
+
+    if not sheet_id:
+        logging.info('Prompt tracking disabled; PROMPT_TRACKING_SHEET_ID not set')
+        return
+
+    last_content = _get_last_prompt_from_sheets(sheet_id).strip()
+    if current_content == last_content and last_content != "":
+        logging.info('Prompt file has not changed, skipping upload')
+        return
+
+    logging.info('Prompt content has changed, uploading to sheets')
+
+    date_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    row = [date_str, current_content]
+    header = ['Date', 'Prompt']
+
+    logging.info(f'Uploading prompt to sheet {sheet_id}')
+
+    _append_to_sheet(sheet_id, row, header)
+
+    logging.info('Successfully uploaded prompt to sheets')
 
 def _append_to_sheet(sheet_id: str | None, row: List[str], header: List[str] | None = None) -> None:
     logging.debug('Function called with sheet_id=%s, row=%s', sheet_id, row)
@@ -168,12 +249,15 @@ def log_best_performers(recs: List[Dict[str, float]]) -> None:
     _append_to_sheet(sheet_id, row, header)
 
 
+
 def query_perplexity(prompt: str, schema: dict = None) -> dict:
     api_key = os.getenv('PERPLEXITY_API_KEY')
     model = os.getenv('PERPLEXITY_MODEL')
     if not api_key or not model:
         logging.error('PERPLEXITY_API_KEY or PERPLEXITY_MODEL not set')
         return {}
+
+    logging.info('Querying Perplexity API with provided prompt')
 
     url = 'https://api.perplexity.ai/chat/completions'
     headers = {
@@ -195,7 +279,19 @@ def query_perplexity(prompt: str, schema: dict = None) -> dict:
         resp = requests.post(url, headers=headers, json=payload, timeout=600)
         resp.raise_for_status()
         data = resp.json()
-        return json.loads(data['choices'][0]['message']['content'].strip())
+        content = data['choices'][0]['message']['content'].strip()
+        
+        if '<think>' in content and '</think>' in content:
+            think_end = content.find('</think>') + len('</think>')
+            content = content[think_end:].strip()
+            content = content.replace('\n', ' ').strip()
+
+        return json.loads(content)
+        
+    except json.JSONDecodeError as e:
+        logging.error(f"Failed to parse JSON from Perplexity response: {e}")
+        logging.error(f"Raw content: {content}")
+        return {}
     except Exception as e:
         logging.error(f"Perplexity API request failed: {e}")
         return {}
@@ -203,7 +299,7 @@ def query_perplexity(prompt: str, schema: dict = None) -> dict:
 
 def get_daily_recommendations(finnhub_client: finnhub.Client) -> None:
     if not _is_weekday():
-        return
+        return {}
     logging.warning('Fetching daily stock recommendations from Perplexity')
     response = query_perplexity(DAILY_RECOMMENDATIONS_PROMPT, DAILY_SCHEMA)
 
@@ -218,10 +314,16 @@ def get_daily_recommendations(finnhub_client: finnhub.Client) -> None:
         rec['open_price'] = open_price
         daily_recommendations.append(rec)
 
+    logging.info(f"daily_recommendations: {daily_recommendations}")
+
     if daily_recommendations:
-        lines = [f"{r['symbol']} | {r['catalyst']} | {r['target']} | {r['risk']}" for r in daily_recommendations]
+        lines = [f"{r['symbol']}[{r['catalyst']}] | Target: {r['target']} | Risk: {r['risk']}" for r in daily_recommendations]
         message = "Today's picks:\n" + "\n".join(lines)
         send_notification(message, USER_IDS)
+        return message
+
+    return {}
+
 
 
 def send_daily_performance(finnhub_client: finnhub.Client) -> None:
@@ -253,7 +355,7 @@ def send_daily_performance(finnhub_client: finnhub.Client) -> None:
 
 def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
     if not _is_weekday():
-        return
+        return {}
     logging.warning('Fetching top daily performers from Perplexity')
     response = query_perplexity(DAILY_BEST_PERFORMERS_PROMPT, BEST_PERFORMERS_SCHEMA)
     recs = response.get('performers', [])
@@ -270,6 +372,8 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
             except Exception as e:
                 logging.error(f"Failed to fetch performance for {rec['symbol']}: {e}")
 
+    logging.info(f"performers: {recs}")
+
     if recs:
         lines = []
         for r in recs:
@@ -281,3 +385,6 @@ def get_best_daily_performers(finnhub_client: finnhub.Client) -> None:
         message = "Today's best performers:\n" + "\n".join(lines)
         send_notification(message, USER_IDS)
         log_best_performers(recs)
+        return message
+
+    return {}
