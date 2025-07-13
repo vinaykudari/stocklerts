@@ -5,7 +5,7 @@ from typing import Any
 
 from app.alerts.notifier import send_notification
 from app.database.db_manager import DBManager
-from app.utils.helper import is_market_open, state_tracker, heartbeat, load_config
+from app.utils.basic import is_market_open, state_tracker, heartbeat, load_config
 
 config = load_config('config.yaml')
 

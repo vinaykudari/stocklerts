@@ -40,3 +40,9 @@ BEST_PERFORMERS_SCHEMA = {
     },
     "required": ["performers"]
 }
+
+IMPROVE_SCHEMA = {
+    "type": "object",
+    "properties": {"new_prompt": {"type": "string"}, "analysis": {"type": "string"}},
+    "required": ["new_prompt", "analysis"],
+}

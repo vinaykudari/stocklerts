@@ -8,12 +8,13 @@ from queue import Queue
 from app.database.db_manager import DBManager
 import os
 
-from app.price_tracking.tracker import check_stock_price_change
-from app.recommendations.daily_recommender import (
+from app.helpers.sheets_helpers import upload_prompt_to_sheets
+from app.services.improve_prompt_service import improve_daily_prompt
+from app.services.price_tracker_service import check_stock_price_change
+from app.services.daily_recommender_service import (
     get_daily_recommendations,
     send_daily_performance,
     get_best_daily_performers,
-    upload_prompt_to_sheets,
 )
 
 
@@ -21,7 +22,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
                     max_notifications: int = 100, max_quote_calls_per_min: int = 60) -> None:
     finnhub_client = finnhub.Client(api_key=os.getenv('FINNHUB_API_KEY'))
     scheduler = BackgroundScheduler()
-    interval_seconds = (max_quote_calls_per_min // 60) + 1  # add some buffer
+    interval_seconds = (max_quote_calls_per_min // 60) + 1
 
     ticker_queue = Queue()
 
@@ -80,6 +81,14 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
         func=upload_prompt_to_sheets,
         trigger=CronTrigger(hour=8, minute=0, timezone='US/Eastern'),
         id='upload_prompt_tracking',
+        max_instances=1,
+        replace_existing=True,
+    )
+
+    scheduler.add_job(
+        func=improve_daily_prompt,
+        trigger=CronTrigger(day_of_week='sun', hour=8, minute=0, timezone='US/Eastern'),
+        id='improve_daily_prompt',
         max_instances=1,
         replace_existing=True,
     )

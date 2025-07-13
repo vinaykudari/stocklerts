@@ -17,6 +17,14 @@ MARKET_OPEN_TIME = dt_time(9, 30)
 MARKET_CLOSE_TIME = dt_time(16, 0)
 MARKET_TIMEZONE = pytz.timezone('US/Eastern')
 
+def load_prompt(prompt_path) -> str:
+    try:
+        with open(prompt_path, 'r') as f:
+            return f.read()
+    except Exception as e:
+        logging.error(f"Failed to load prompt: {e}")
+        raise e
+
 
 def load_config(config_path: str) -> dict:
     with open(config_path, 'r') as file:
@@ -99,3 +107,13 @@ def heartbeat(url: str, interval: int = 5):
         return wrapper
     return decorator
 
+
+def is_weekday() -> bool:
+    return datetime.now(MARKET_TIMEZONE).weekday() < 5
+
+
+def fmt(rows: list[dict]) -> str:
+    out_lines = []
+    for r in rows:
+        out_lines.append(",".join(str(v) for v in r.values()))
+    return "\n".join(out_lines)
