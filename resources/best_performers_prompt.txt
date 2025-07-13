@@ -15,11 +15,5 @@ RULES
 - One brief reason per stock tied to recent catalyst
 - Return only valid JSON, no extra text or formatting
 
-OUTPUT FORMAT: [
-  {
-    "symbol": <TICKER>,
-    "pct": <Actual Percentage growth Eg. 2%>,
-    "reason": <Reason why the stock went up today Eg. Earnings beat, FDA approval, or contract win>,
-  },
-  ...
-]
+OUTPUT FORMAT: List of JSON objects
+Each object should have keys symbol, pct and reason
