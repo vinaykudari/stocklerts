@@ -2,8 +2,8 @@ import logging
 
 from app.scheduler.job_scheduler import start_scheduler
 from app.database.db_manager import DBManager
-from app.utils.helper import load_config, setup_logging
-from app.api_server import start_health_server
+from app.utils.basic import load_config, setup_logging
+from app.api_server import start_server
 
 
 def main() -> None:
@@ -36,8 +36,7 @@ def main() -> None:
         max_notifications,
         max_quote_calls_per_min
     )
-    # Start lightweight health check server in the background
-    start_health_server()
+    start_server()
 
     try:
         import time
