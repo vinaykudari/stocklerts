@@ -1,0 +1,51 @@
+# Testing Dependencies for Stocklerts Application
+
+# Core testing framework
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+pytest-asyncio>=0.21.0
+
+# Test utilities
+unittest-xml-reporting>=3.2.0
+coverage>=7.0.0
+mock>=4.0.3
+
+# For testing HTTP endpoints
+requests-mock>=1.10.0
+responses>=0.23.0
+
+# For testing async code
+pytest-asyncio>=0.21.0
+aioresponses>=0.7.4
+
+# For testing database operations
+pytest-postgresql>=4.1.1
+pytest-sqlite>=0.1.0
+
+# For testing with fixtures
+pytest-fixtures>=0.1.0
+factory-boy>=3.2.1
+
+# For testing time-dependent code
+freezegun>=1.2.2
+time-machine>=2.9.0
+
+# For testing environment variables
+pytest-env>=0.8.1
+
+# For parallel test execution
+pytest-xdist>=3.2.0
+
+# For test reporting
+pytest-html>=3.1.1
+pytest-json-report>=1.5.0
+
+# For testing with temporary files
+pytest-tmp-path>=0.1.0
+
+# For testing logging
+pytest-logging>=2016.11.4
+
+# For testing configuration
+pytest-config>=0.1.0
