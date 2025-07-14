@@ -29,10 +29,9 @@ BEST_PERFORMERS_SCHEMA = {
                 "type": "object",
                 "properties": {
                     "symbol": {"type": "string"},
-                    "pct": {"type": "number"},
                     "reason": {"type": "string"}
                 },
-                "required": ["symbol", "pct", "reason"]
+                "required": ["symbol", "reason"]
             },
             "minItems": 5,
             "maxItems": 5

@@ -2,18 +2,18 @@ ROLE
 You are a senior equity-research analyst at a top-tier U.S. investment fund.
 
 TASK
-Identify the 5 best-performing U.S. stocks today (ranked by intraday %-gain during regular trading hours). For each, provide the ticker, actual percentage growth, and one crisp reason tied to news or data released in the last 24 hours.
+Analyze the following top-performing U.S. stocks today:
+{tickers_str}
+
+For each ticker, provide one crisp reason tied to news or data released.
 
 DATA REQUIREMENTS
-- Real-time price data for today's session
-- Fresh catalyst (earnings beat, analyst upgrade, policy headline, Trump/X post, etc.) published within 24 hours
+- Fresh catalyst (earnings beat, analyst upgrade, policy headline, Trump/X post, Hedge funds or politics etc.)
 
 RULES
 - Valid U.S. tickers only (NYSE/NASDAQ)
-- Sort by highest percentage gain first
-- Include actual percentage as a number (not string)
 - One brief reason per stock tied to recent catalyst
 - Return only valid JSON, no extra text or formatting
 
 OUTPUT FORMAT: List of JSON objects
-Each object should have keys symbol, pct and reason
+Each object should have keys symbol and reason

@@ -71,7 +71,6 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
     scheduler.add_job(
         func=get_best_daily_performers,
         trigger=CronTrigger(hour=16, minute=5, timezone='US/Eastern', day_of_week='mon-fri'),
-        args=[finnhub_client],
         id='best_daily_performers',
         max_instances=1,
         replace_existing=True,

@@ -7,6 +7,7 @@ from app.alerts.notifier import send_notification
 from app.constants import DAILY_RECOMMENDATIONS_PROMPT_PATH, DAILY_BEST_PERFORMERS_PROMPT_PATH
 from app.helpers.plex_helpers import query_perplexity
 from app.helpers.sheets_helpers import log_daily_performance, log_best_performers
+from app.helpers.stock_helpers import fetch_top_gainers_from_fmp
 from app.schemas.prompt_schemas import DAILY_SCHEMA, BEST_PERFORMERS_SCHEMA
 from app.utils.basic import is_weekday, load_prompt
 
@@ -88,30 +89,37 @@ def send_daily_performance(finnhub_client: finnhub.Client, api=False) -> Dict:
     return {}
 
 
-def get_best_daily_performers(finnhub_client: finnhub.Client, api=False) -> Dict:
+def get_best_daily_performers(api=False) -> Dict:
     if not api and not is_weekday():
         return {}
-    logging.warning('Fetching top daily performers from Perplexity')
-    response = query_perplexity(DAILY_BEST_PERFORMERS_PROMPT, BEST_PERFORMERS_SCHEMA)
-    recs = response.get('performers', [])
+    logging.warning('Fetching top daily performers from FMP')
+    recs_with_pct = []
 
-    for rec in recs:
-        if 'pct' not in rec:
-            try:
-                quote = finnhub_client.quote(rec['symbol'])
-                open_price = quote.get('o')
-                close_price = quote.get('c')
-                if open_price:
-                    pct = (close_price - open_price) / open_price * 100
-                    rec['pct'] = pct
-            except Exception as e:
-                logging.error(f"Failed to fetch performance for {rec['symbol']}: {e}")
+    try:
+        top_10_gainers = fetch_top_gainers_from_fmp()
+        tickers = []
+        for stock in top_10_gainers:
+            s = f"Symbol: {stock['symbol']}, Name: {stock['name']}, Gain: {stock['changesPercentage']} "
+            tickers.append(s)
+        tickers_str = "\n ".join(tickers)
+        prompt = DAILY_BEST_PERFORMERS_PROMPT.format(tickers_str=tickers_str)
+        perplexity_response = query_perplexity(prompt, BEST_PERFORMERS_SCHEMA)
+        recs = perplexity_response.get('performers', [])
 
-    logging.info(f"performers: {recs}")
+        for stock in top_10_gainers:
+            reason = next((r['reason'] for r in recs if r['symbol'] == stock['symbol']),
+                          f"Stock gained {stock['changesPercentage']:.2f}% today")
+            recs_with_pct.append({
+                'symbol': stock['symbol'],
+                'pct': stock['changesPercentage'],
+                'reason': reason
+            })
+    except Exception as e:
+        logging.error(f"Unable to fetch top daily performers, Error: {e}")
 
-    if recs:
+    if recs_with_pct:
         lines = []
-        for r in recs:
+        for r in recs_with_pct:
             pct = r.get('pct')
             if isinstance(pct, float):
                 lines.append(f"{r['symbol']} [{pct:+.2f}%]: {r['reason']}")
@@ -119,7 +127,7 @@ def get_best_daily_performers(finnhub_client: finnhub.Client, api=False) -> Dict
                 lines.append(f"{r['symbol']}: {r['reason']}")
         message = "Today's best performers:\n" + "\n".join(lines)
         send_notification(message, admin=api)
-        log_best_performers(recs)
+        log_best_performers(recs_with_pct)
         return {"message": message}
 
     return {}

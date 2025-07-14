@@ -64,17 +64,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(res).encode())
         elif self.path == '/best_performers':
-            client = getattr(self.server, 'finnhub_client', None)
-            if client is None:
-                api_key = os.getenv('FINNHUB_API_KEY')
-                client = finnhub.Client(api_key=api_key) if api_key else None
-
-            if client is None:
-                self.send_response(500)
-                self.end_headers()
-                return
-
-            res = get_best_daily_performers(client, api=True)
+            res = get_best_daily_performers(api=True)
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
