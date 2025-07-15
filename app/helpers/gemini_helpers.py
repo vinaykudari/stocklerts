@@ -1,15 +1,19 @@
 import os
 import json
 import logging
+from typing import List, Dict
+
 from google.oauth2 import service_account
 import google.genai as genai
 from google.genai import types
 
+from app.utils.parsing import parse_json
 
-def query_gemini(prompt: str, schema: dict | None = None) -> dict | str:
+
+def query_gemini(prompt: str, schema: dict, model_name: str = "gemini-2.5-pro") -> dict | str | List[Dict]:
     project_id = os.getenv('GOOGLE_PROJECT_ID', 'doculoom-446020')
     location = os.getenv('GOOGLE_LOCATION', 'us-central1')
-    model_name = os.getenv('GEMINI_MODEL', 'gemini-2.5-pro')
+    model_name = os.getenv('GEMINI_MODEL', model_name)
     google_creds_json = os.getenv('GOOGLE_SERVICE_ACCOUNT')
     api_key = os.getenv('GOOGLE_API_KEY')
 
@@ -52,17 +56,12 @@ def query_gemini(prompt: str, schema: dict | None = None) -> dict | str:
         return {}
 
     try:
-        if schema:
-            generation_config = types.GenerateContentConfig(
-                temperature=0.2,
-                response_mime_type="application/json",
-                response_schema=schema
-            )
-        else:
-            generation_config = types.GenerateContentConfig(
-                temperature=0.2
-            )
-
+        generation_config = types.GenerateContentConfig(
+            tools=[types.Tool(google_search=types.GoogleSearch())],
+            response_modalities=["TEXT"],
+            max_output_tokens=5000,
+            response_schema=schema
+        )
         logging.info("Gemini is thinking...")
         response = client.models.generate_content(
             model=model_name,
@@ -73,16 +72,15 @@ def query_gemini(prompt: str, schema: dict | None = None) -> dict | str:
         if response.candidates and len(response.candidates) > 0:
             candidate = response.candidates[0]
             if candidate.content and candidate.content.parts:
-                response_text = candidate.content.parts[0].text.strip()
-
+                response_text = candidate.content.parts[0].text
                 if schema:
                     try:
-                        return json.loads(response_text)
+                        return parse_json(response_text)
                     except json.JSONDecodeError as e:
                         logging.error(f"Failed to parse JSON response: {e}")
                         return {}
                 else:
-                    return response_text
+                    return response_text.strip()
             else:
                 logging.error("No content in response")
                 return {} if schema else ""

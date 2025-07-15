@@ -5,6 +5,7 @@ import finnhub
 
 from app.alerts.notifier import send_notification
 from app.constants import DAILY_RECOMMENDATIONS_PROMPT_PATH, DAILY_BEST_PERFORMERS_PROMPT_PATH
+from app.helpers.gemini_helpers import query_gemini
 from app.helpers.plex_helpers import query_perplexity
 from app.helpers.sheets_helpers import log_daily_performance, log_best_performers
 from app.helpers.stock_helpers import fetch_top_gainers_from_fmp
@@ -32,11 +33,10 @@ def get_market_pct(client: finnhub.Client) -> Optional[float]:
 def get_daily_recommendations(finnhub_client: finnhub.Client, api=False) -> Dict:
     if not api and not is_weekday():
         return {}
-    logging.info('Fetching daily stock recommendations from Perplexity')
-    response = query_perplexity(DAILY_RECOMMENDATIONS_PROMPT, DAILY_SCHEMA)
+    logging.info('Fetching daily stock recommendations from Gemini')
+    response = query_gemini(DAILY_RECOMMENDATIONS_PROMPT, DAILY_SCHEMA)
 
-    recs = response.get('recommendations', [])
-    for rec in recs:
+    for rec in response:
         try:
             quote = finnhub_client.quote(rec['symbol'])
             open_price = quote.get('o')
@@ -51,7 +51,7 @@ def get_daily_recommendations(finnhub_client: finnhub.Client, api=False) -> Dict
     if daily_recommendations:
         lines = [f"{r['symbol']}: {r['catalyst']} Target: {r['target']} Risk: {r['risk']}" for r in
                  daily_recommendations]
-        message = "Perplexity read the news and recommends:\n" + "\n".join(lines)
+        message = "Stocklerts read the news and recommends:\n" + "\n".join(lines)
         send_notification(message, admin=api)
         return {"message": message}
 
@@ -98,17 +98,21 @@ def get_best_daily_performers(api=False) -> Dict:
     try:
         top_10_gainers = fetch_top_gainers_from_fmp()
         tickers = []
-        for stock in top_10_gainers:
-            s = f"Symbol: {stock['symbol']}, Name: {stock['name']}, Gain: {stock['changesPercentage']} "
-            tickers.append(s)
-        tickers_str = "\n ".join(tickers)
-        prompt = DAILY_BEST_PERFORMERS_PROMPT.format(tickers_str=tickers_str)
-        perplexity_response = query_perplexity(prompt, BEST_PERFORMERS_SCHEMA)
-        recs = perplexity_response.get('performers', [])
 
         for stock in top_10_gainers:
-            reason = next((r['reason'] for r in recs if r['symbol'] == stock['symbol']),
-                          f"Stock gained {stock['changesPercentage']:.2f}% today")
+            s = f"symbol: {stock['symbol']}, name: {stock['name']}, gain: {stock['changesPercentage']} "
+            tickers.append(s)
+        tickers_str = "\n ".join(tickers)
+
+        prompt = DAILY_BEST_PERFORMERS_PROMPT.format(tickers_str=tickers_str)
+        response = query_gemini(prompt, BEST_PERFORMERS_SCHEMA, model_name='gemini-2.5-flash')
+
+        reason_dict = {item['symbol']: item['reason'] for item in response if
+                       isinstance(item, dict) and 'symbol' in item}
+
+        for stock in top_10_gainers:
+            reason = reason_dict.get(stock['symbol'], f"Stock gained {stock['changesPercentage']:.2f}% today")
+
             recs_with_pct.append({
                 'symbol': stock['symbol'],
                 'pct': stock['changesPercentage'],
