@@ -59,6 +59,7 @@ def get_daily_recommendations(finnhub_client: finnhub.Client, api=False) -> Dict
 
 
 def send_daily_performance(finnhub_client: finnhub.Client, api=False) -> Dict:
+    global daily_recommendations
     if (not api and not is_weekday()) or not daily_recommendations:
         return {}
     lines = []
@@ -84,6 +85,7 @@ def send_daily_performance(finnhub_client: finnhub.Client, api=False) -> Dict:
         except Exception as e:
             logging.error(f"Failed to log daily performance: {e}")
 
+        daily_recommendations = []
         return {"message": message}
 
     return {}
