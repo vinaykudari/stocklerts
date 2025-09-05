@@ -16,6 +16,7 @@ from app.services.daily_recommender_service import (
     send_daily_performance,
     get_best_daily_performers,
 )
+from app.utils.basic import MARKET_TIMEZONE
 
 
 def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thresh: dict,
@@ -52,7 +53,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
 
     scheduler.add_job(
         func=get_daily_recommendations,
-        trigger=CronTrigger(hour=9, minute=30, timezone='US/Eastern', day_of_week='mon-fri'),
+        trigger=CronTrigger(hour=9, minute=30, timezone=MARKET_TIMEZONE, day_of_week='mon-fri'),
         args=[finnhub_client],
         id='daily_recommendations',
         max_instances=1,
@@ -61,7 +62,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
 
     scheduler.add_job(
         func=send_daily_performance,
-        trigger=CronTrigger(hour=16, minute=0, timezone='US/Eastern', day_of_week='mon-fri'),
+        trigger=CronTrigger(hour=16, minute=0, timezone=MARKET_TIMEZONE, day_of_week='mon-fri'),
         args=[finnhub_client],
         id='daily_performance',
         max_instances=1,
@@ -70,7 +71,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
 
     scheduler.add_job(
         func=get_best_daily_performers,
-        trigger=CronTrigger(hour=16, minute=5, timezone='US/Eastern', day_of_week='mon-fri'),
+        trigger=CronTrigger(hour=16, minute=5, timezone=MARKET_TIMEZONE, day_of_week='mon-fri'),
         id='best_daily_performers',
         max_instances=1,
         replace_existing=True,
@@ -78,7 +79,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
 
     scheduler.add_job(
         func=upload_prompt_to_sheets,
-        trigger=CronTrigger(hour=8, minute=0, timezone='US/Eastern'),
+        trigger=CronTrigger(hour=8, minute=0, timezone=MARKET_TIMEZONE),
         id='upload_prompt_tracking',
         max_instances=1,
         replace_existing=True,
@@ -86,7 +87,7 @@ def start_scheduler(db_manager: DBManager, ticker_config: dict, user_notify_thre
 
     scheduler.add_job(
         func=improve_daily_prompt,
-        trigger=CronTrigger(day_of_week='sun', hour=8, minute=0, timezone='US/Eastern'),
+        trigger=CronTrigger(day_of_week='sun', hour=8, minute=0, timezone=MARKET_TIMEZONE),
         id='improve_daily_prompt',
         max_instances=1,
         replace_existing=True,
